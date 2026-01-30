@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en"> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate-key="mcourse_page_title_default">Interactive AI Learning | Uplas</title>
+    <link rel="icon" href="images/uni_plas_prev_ui.ico" type="image/x-icon">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/mcourse.css">
+
+    <meta name="description" content="Engage in interactive AI-powered Q&A learning sessions on Uplas. Experience personalized learning with TTS, TTV, and AI Tutor support.">
+    <meta name="theme-color" content="#00b4d8">
+</head>
+<body class="light-mode">
+
+   <div id="site-header-placeholder">
+    </div>
+
+    <main class="mcourse-main-content" id="main-content-area" role="main">
+        <div class="learning-environment-grid">
+            <aside class="learning-sidebar learning-sidebar--left">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title" data-translate-key="mcourse_sidebar_course_nav">Course Navigation</h3>
+                    <nav id="course-module-topic-nav" class="module-topic-nav">
+                      
+                        <div class="module-group">
+                            <button class="module-title-btn" aria-expanded="true" aria-controls="module-1-topics-nav" data-translate-key="mcourse_module1_title_placeholder">Module 1: AI Fundamentals</button>
+                            <ul id="module-1-topics-nav" class="topic-list-nav">
+                                <li><a href="#" class="topic-link-nav active" data-topic-id="1.1" data-course-id="adv_ai" data-translate-key="mcourse_topic1.1_title_placeholder">1.1 What is AI?</a></li>
+                                <li><a href="#" class="topic-link-nav" data-topic-id="1.2" data-course-id="adv_ai" data-translate-key="mcourse_topic1.2_title_placeholder">1.2 Types of AI</a></li>
+                                <li><a href="#" class="topic-link-nav completed" data-topic-id="1.3" data-course-id="adv_ai" data-translate-key="mcourse_topic1.3_title_placeholder">1.3 History of AI <i class="fas fa-check-circle topic-status-icon"></i></a></li>
+                            </ul>
+                        </div>
+                        <div class="module-group">
+                            <button class="module-title-btn" aria-expanded="false" aria-controls="module-2-topics-nav" data-translate-key="mcourse_module2_title_placeholder">Module 2: Machine Learning Basics</button>
+                            <ul id="module-2-topics-nav" class="topic-list-nav" hidden>
+                                <li><a href="#" class="topic-link-nav" data-topic-id="2.1" data-course-id="adv_ai" data-translate-key="mcourse_topic2.1_title_placeholder">2.1 Supervised Learning</a></li>
+                                <li><a href="#" class="topic-link-nav locked" data-topic-id="2.2" data-course-id="adv_ai" data-translate-key="mcourse_topic2.2_title_placeholder">2.2 Unsupervised Learning <i class="fas fa-lock topic-status-icon"></i></a></li>
+                            </ul>
+                        </div>
+                       
+                    </nav>
+                </div>
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title" data-translate-key="mcourse_sidebar_progress">Your Progress</h3>
+                    <div class="progress-overview-simple">
+                        <p><span data-translate-key="mcourse_topic_completion">Topic Completion:</span> <strong id="topic-progress-percentage">0%</strong></p>
+                        <div class="progress-bar-container small-progress">
+                            <div class="progress-bar-fill" id="topic-progress-bar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <p><span data-translate-key="mcourse_xp_points">XP Points:</span> <strong id="user-xp-points">0</strong></p>
+                        <p><span data-translate-key="mcourse_badges_earned">Badges:</span> <strong id="user-badges-count">0</strong></p>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="learning-interaction-area" aria-labelledby="current-topic-title-main">
+                <header class="topic-header-main">
+                    <h2 id="current-topic-title-main" class="current-topic-title-text" data-translate-key="mcourse_topic_default_title">1.1 What is AI?</h2>
+                    <div class="topic-actions">
+                        <button class="topic-action-btn" id="bookmark-topic-btn" aria-label="Bookmark this topic" title="Bookmark topic">
+                            <i class="far fa-bookmark"></i> <span data-translate-key="button_bookmark">Bookmark</span>
+                        </button>
+                        <button class="topic-action-btn" id="discuss-topic-btn" aria-label="Discuss this topic in community" title="Discuss in community">
+                            <i class="fas fa-comments"></i> <span data-translate-key="button_discuss">Discuss</span>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="qna-content-area" id="qna-content-area" role="log" aria-live="polite">
+                 
+                    <div class="message-bubble ai-question-bubble">
+                        
+                        <p id="ai-initial-message-text" data-translate-key="mcourse_ai_welcome_question">Welcome! Let's start with a basic question: Can you define Artificial Intelligence in your own words?</p>
+                    </div>
+                </div>
+
+                <div class="media-controls-area">
+                    <div class="tts-controls">
+                        <label for="tts-voice-character-select" class="sr-only" data-translate-key="sr_select_voice">Select Voice Character</label>
+                        <select id="tts-voice-character-select" class="form__select form__select--compact" title="Select TTS Voice">
+                            <option value="alloy" data-translate-key="tts_voice_alloy">Alloy (Neutral)</option>
+                            <option value="echo" data-translate-key="tts_voice_echo">Echo (Energetic)</option>
+                            <option value="fable" data-translate-key="tts_voice_fable">Fable (Storyteller)</option>
+                            <option value="onyx" data-translate-key="tts_voice_onyx">Onyx (Deep)</option>
+                            <option value="nova" data-translate-key="tts_voice_nova">Nova (Bright)</option>
+                            <option value="shimmer" data-translate-key="tts_voice_shimmer">Shimmer (Warm)</option>
+                        </select>
+                        <button id="play-tts-btn" class="button button--secondary button--small media-control-button" aria-label="Play current content as audio" title="Listen to content">
+                            <i class="fas fa-play"></i> <span data-translate-key="button_listen">Listen</span>
+                        </button>
+                        <div id="audio-player-container" class="audio-player-container-inline">
+                        </div>
+                    </div>
+                    <div class="ttv-controls">
+                        <button id="generate-ttv-btn" class="button button--secondary button--small media-control-button" aria-label="Generate video for this content" title="Watch video explanation">
+                            <i class="fas fa-video"></i> <span data-translate-key="button_watch_video">Watch Video</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="ttv-player-container" class="video-player-wrapper" style="display: none;">
+
+                </div>
+
+                <form id="user-answer-form" class="user-input-form">
+                    <label for="user-answer-input" class="sr-only" data-translate-key="sr_your_answer">Your Answer</label>
+                    <textarea id="user-answer-input" class="form__textarea" rows="3" placeholder="Type your answer or ask a question..." required data-translate-key="mcourse_answer_placeholder"></textarea>
+                    <button type="submit" class="button button--primary" id="submit-answer-btn" aria-label="Submit your answer">
+                        <i class="fas fa-paper-plane"></i> <span data-translate-key="button_submit_answer">Submit</span>
+                    </button>
+                </form>
+                 <div id="answer-feedback-area" class="answer-feedback-display" aria-live="assertive">
+                   
+                 </div>
+            </section>
+
+            <aside class="learning-sidebar learning-sidebar--right">
+                <div class="sidebar-section ai-tutor-panel-preview">
+                    <h3 class="sidebar-title" data-translate-key="mcourse_sidebar_ai_tutor">AI Tutor</h3>
+                    <div id="ai-tutor-quick-help" class="ai-tutor-quick-help-text">
+                        <p data-translate-key="mcourse_ai_tutor_prompt">Stuck? Need clarification? Ask the AI Tutor!</p>
+                    </div>
+                    <button class="button button--secondary button--full-width" id="open-ai-tutor-btn">
+                        <i class="fas fa-robot"></i> <span data-translate-key="button_open_ai_tutor">Open AI Tutor</span>
+                    </button>
+                </div>
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title" data-translate-key="mcourse_sidebar_resources">Topic Resources</h3>
+                    <ul id="topic-resources-list" class="resource-list-sidebar">
+                      
+                        <li><a href="#" target="_blank" rel="noopener noreferrer"><i class="fas fa-link"></i> <span data-translate-key="mcourse_resource_placeholder1">Key Definitions PDF</span></a></li>
+                        <li><a href="#" target="_blank" rel="noopener noreferrer"><i class="fas fa-book-open"></i> <span data-translate-key="mcourse_resource_placeholder2">Further Reading Chapter</span></a></li>
+                    </ul>
+                </div>
+
+                
+                <div id="ai-tutor-chat-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ai-tutor-modal-title" hidden>
+                    <div class="modal__content ai-tutor-modal__content">
+                        <button class="modal__close-button" id="close-ai-tutor-modal-btn" aria-label="Close AI Tutor chat">&times;</button>
+                        <h4 id="ai-tutor-modal-title" class="modal__title" data-translate-key="ai_tutor_chat_title">AI Tutor Chat</h4>
+                        <div id="ai-tutor-messages" class="ai-tutor-messages-area" role="log" aria-live="polite">
+                           ]
+                        </div>
+                        <form id="ai-tutor-input-form" class="ai-tutor-input-area">
+                            <label for="ai-tutor-message-input" class="sr-only" data-translate-key="sr_ai_tutor_ask_question">Ask a question</label>
+                            <input type="text" id="ai-tutor-message-input" class="form__input" placeholder="Ask a question about the topic..." required data-translate-key="ai_tutor_input_placeholder">
+                            <button type="submit" class="button button--primary" aria-label="Send message to AI Tutor"><i class="fas fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <div id="site-footer-placeholder">
+    </div>
+    
+    <script src="js/global.js"></script>
+    <script src="js/apiUtils.js"></script>
+    <script src="js/componentLoader.js"></script> 
+    <script src="js/i18n.js"></script>
+    <script src="js/mcourse.js"></script>
+</body>
+</html>

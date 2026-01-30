@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate-key="ucourses_list_page_title">Explore AI Courses | Uplas</title>
+    <link rel="icon" href="images/uni_plas_prev_ui.ico" type="image/x-icon">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/ucourse.css">
+
+    <meta name="description" content="Browse a wide range of AI courses on Uplas. Find personalized learning paths in AI foundations, applications, development, and AI in the workplace.">
+    <meta name="theme-color" content="#00b4d8">
+</head>
+<body class="light-mode">
+
+    <div id="site-header-placeholder"></div>
+
+    <main class="main-content">
+        <section class="courses-container" aria-labelledby="courses-heading">
+            <div class="container">
+                <header class="courses-header">
+                    <h1 id="courses-heading" class="courses__main-title" data-translate-key="ucourses_list_main_title">Explore Our AI Courses</h1>
+                    <p class="courses__subtitle" data-translate-key="ucourses_list_subtitle">Find the right path to enhance your AI skills, from foundational concepts to advanced applications, tailored to your learning style and career goals.</p>
+
+                    <div class="controls-bar">
+                        <div class="search-bar">
+                            <label for="search-input" class="sr-only" data-translate-key="sr_search_courses">Search courses</label>
+                            <input type="search" id="search-input" class="search-bar__input" placeholder="Search courses (e.g., Python, Workplace AI)" aria-label="Search courses by keyword" data-translate-key="ucourses_list_search_placeholder">
+                            <button id="search-button" class="search-bar__button" aria-label="Search" data-translate-key="ucourses_list_search_button_sr">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button id="clear-search-button" class="search-bar__button search-bar__button--clear" aria-label="Clear search" style="display: none;" data-translate-key="ucourses_list_clear_search_button_sr">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="filter-controls">
+                            </div>
+                    </div>
+                </header>
+
+                <div class="courses-grid" id="courses-grid">
+                    </div>
+                <p id="no-courses-message" class="no-results-message" style="display: none;" data-translate-key="ucourses_list_no_results">No courses found matching your criteria.</p>
+            </div>
+        </section>
+    </main>
+
+    <div id="site-footer-placeholder"></div>
+
+    <script src="js/componentLoader.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/apiUtils.js"></script>
+    <script src="js/global.js"></script>
+    <script src="js/ucourse.js"></script> </body>
+</html>

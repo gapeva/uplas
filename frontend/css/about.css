@@ -1,0 +1,148 @@
+/* css/about.css */
+/* ==========================================================================
+   Uplas About Us Page Styles
+   - Relies on variables.css and global.css
+   ========================================================================== */
+
+@import url('global.css');
+
+/* --- About Us Hero Section --- */
+.about-hero {
+    padding: var(--spacing-xxxl) 0;
+    background-color: var(--color-light-text-primary);
+    text-align: center;
+    color: var(--color-white);
+}
+
+.dark-mode .about-hero {
+    background-color: var(--color-dark-bg-secondary);
+}
+
+.about-hero__title {
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-white);
+}
+.dark-mode .about-hero__title {
+    color: var(--color-primary-light);
+}
+.about-hero__subtitle {
+    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+    color: var(--color-light-border);
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.7;
+    opacity: 0.9;
+}
+
+
+/* --- Team Section --- */
+.team-section {
+    padding: var(--spacing-xxxl) 0;
+    background-color: var(--current-bg-color);
+}
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-xl);
+    max-width: 1200px;
+    margin: var(--spacing-xl) auto 0;
+}
+.team-card {
+    background-color: var(--current-card-bg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow-md);
+    text-align: center;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    overflow: hidden;
+    border: 1px solid var(--current-border-color);
+}
+.team-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--box-shadow-lg);
+}
+.team-card__image-container {
+    width: 100%;
+    height: 350px;
+    background-color: var(--current-border-color);
+}
+.team-card__image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+.team-card__content { padding: var(--spacing-lg); }
+.team-card__name {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--current-text-color);
+    margin-bottom: var(--spacing-xs);
+}
+.dark-mode .team-card__name { color: var(--color-primary-light); }
+.team-card__role {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.dark-mode .team-card__role { color: var(--color-secondary-light); }
+.team-card__bio {
+    font-size: 0.95rem;
+    color: var(--current-text-color-secondary);
+    text-align: left;
+    line-height: 1.7;
+    margin-bottom: var(--spacing-lg);
+}
+.team-card__socials {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+}
+.team-card__socials a {
+    color: var(--current-text-color-secondary);
+    font-size: 1.3rem;
+    transition: color var(--transition-base), transform var(--transition-base);
+}
+.team-card__socials a:hover {
+    color: var(--current-link-hover-color);
+    transform: scale(1.1);
+}
+
+/* === NEW: Compact Contact Form Styling === */
+.about-contact-section {
+    padding: var(--spacing-xxxl) 0;
+    background-color: var(--color-light-bg);
+}
+.dark-mode .about-contact-section {
+    background-color: var(--color-dark-bg-secondary);
+}
+.compact-contact-form {
+    max-width: 600px; /* Reduces horizontal size */
+    margin: var(--spacing-xl) auto 0;
+    background: var(--current-card-bg);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow-lg);
+}
+/* Ensure form inputs are visible and use the new theme colors */
+.compact-contact-form .form__input,
+.compact-contact-form .form__textarea {
+    background-color: var(--current-input-bg);
+    border: 1px solid var(--current-border-color);
+    color: var(--current-text-color);
+}
+.compact-contact-form .form__input::placeholder,
+.compact-contact-form .form__textarea::placeholder {
+    color: var(--current-text-color-secondary);
+    opacity: 0.7;
+}
+.compact-contact-form .form__input:focus,
+.compact-contact-form .form__textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--box-shadow-focus);
+}

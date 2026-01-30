@@ -1,0 +1,17 @@
+# Core Django & DRF
+Django>=4.2,<5.0
+djangorestframework>=3.14,<3.16
+djangorestframework-simplejwt>=5.3,<5.4
+django-cors-headers>=4.3,<4.4
+pymysql
+python-dotenv>=1.0,<1.1
+gunicorn>=21.2,<22.1
+
+# Filtering & Nested Routers
+django-filter>=24.1,<25.0
+drf-nested-routers
+
+# Utilities & Services
+requests>=2.31.0,<2.33.0
+Pillow
+stripe
