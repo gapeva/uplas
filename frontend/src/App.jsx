@@ -38,7 +38,9 @@ const App = () => {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<LoginPage />} />
+            
+            {/* Updated Auth Route */}
+            <Route path="/login" element={<AuthPage />} />
             
             {/* Courses */}
             <Route path="/courses" element={<CoursesPage />} />
@@ -66,12 +68,12 @@ const App = () => {
             {/* Dashboard */}
             <Route path="/dashboard" element={
                 <ProtectedRoute><DashboardPage /></ProtectedRoute>
+            } />
 
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            } />
               
-            {/* Specific Route for Learning Interface (No Layout/Header/Footer usually) */}
+            {/* Specific Route for Learning Interface */}
             <Route path="/courses/:courseSlug/learn/:topicId?" element={
                 <ProtectedRoute>
                     <LessonPage />
