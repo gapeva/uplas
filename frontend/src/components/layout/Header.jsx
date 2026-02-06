@@ -24,7 +24,7 @@ const Header = () => {
         <header className="site-header">
             <div className="container header__container">
                 <Link to="/" className="logo" aria-label="Uplas Homepage">
-                    <img src="/images/logo-u.svg.png" alt="Uplas Logo" className="logo__img" />
+                    <img src="/images/uni_plas_prev.ico.png" alt="Uplas Logo" className="logo__img" />
                     <span className="logo__text">plas</span>
                 </Link>
 
