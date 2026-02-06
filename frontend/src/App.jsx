@@ -23,6 +23,9 @@ import AITutorPage from './pages/AITutorPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import AboutPage from './pages/AboutPage'; // And Terms, Privacy...
+import AuthPage from './pages/AuthPage'; 
+import AboutPage from './pages/AboutPage';
+
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useUplas();
