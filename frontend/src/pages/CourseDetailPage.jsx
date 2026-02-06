@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
     CheckCircle, PlayCircle, ChevronDown, ChevronUp, 
-    Clock, FileText, Award, Globe, AlertCircle, Star, Video, X 
+    Star, Video, FileText, X, AlertCircle 
 } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/authStore';
-import '../styles/mcourseD.css'; // Ensure legacy styles are applied
+import '../styles/mcourseD.css'; 
 
 export default function CourseDetailPage() {
     const { slug } = useParams();
@@ -135,7 +135,7 @@ export default function CourseDetailPage() {
     return (
         <div className="bg-gray-50 min-h-screen font-sans text-gray-800">
             
-            {/* --- HERO SECTION (From React logic, usually dynamic) --- */}
+            {/* --- HERO SECTION --- */}
             <div className="bg-gray-900 text-white pt-12 pb-20 md:pb-28">
                 <div className="container mx-auto px-4 max-w-7xl">
                     <div className="flex items-center gap-2 text-sm text-gray-400 mb-6 font-medium">
@@ -180,12 +180,15 @@ export default function CourseDetailPage() {
                 </div>
             </div>
 
-            {/* --- MAIN CONTENT (Wrapped in Legacy Classes) --- */}
+            {/* --- MAIN CONTENT --- */}
             <main>
+                {/* We use BOTH legacy classes (course-main-content) AND Tailwind layout classes 
+                   to ensure the grid system works even if CSS is missing.
+                */}
                 <section className="course-main-content section-padding container mx-auto px-4 max-w-7xl -mt-16 pb-20">
                     <div className="container grid-container grid md:grid-cols-3 gap-8 relative">
                         
-                        {/* LEFT COLUMN (Legacy Class: course-details-column) */}
+                        {/* LEFT COLUMN */}
                         <div className="course-details-column md:col-span-2 space-y-8">
                             
                             {/* What you'll learn */}
@@ -204,7 +207,7 @@ export default function CourseDetailPage() {
                                 </ul>
                             </div>
 
-                            {/* Curriculum (Legacy Class: curriculum-list) */}
+                            {/* Curriculum Accordion */}
                             <div className="curriculum-list bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
@@ -248,18 +251,18 @@ export default function CourseDetailPage() {
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN (Legacy Class: course-enroll-column) */}
+                        {/* RIGHT COLUMN */}
                         <aside className="course-enroll-column md:col-span-1">
                             <div className="sticky top-24 space-y-6">
                                 
-                                {/* Enroll Box (Legacy Class: course-enroll-box) */}
+                                {/* Enroll Box */}
                                 <div className="course-enroll-box bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
                                     <div 
                                         className="relative aspect-video bg-black cursor-pointer group" 
                                         onClick={() => setShowPreview(true)}
                                     >
                                         <img 
-                                            src={course.thumbnail_url || "https://placehold.co/600x400"} 
+                                            src={course.thumbnail_url || "https://placehold.co/600x400/3498db/ffffff?text=Course+Thumbnail"} 
                                             alt={course.title} 
                                             className="course-thumbnail w-full h-full object-cover opacity-90 group-hover:opacity-75 transition"
                                         />
@@ -279,7 +282,6 @@ export default function CourseDetailPage() {
                                             Get full lifetime access to all modules, future updates, and our exclusive community channel.
                                         </p>
 
-                                        {/* Paystack Button with Legacy Class */}
                                         <button 
                                             onClick={handleEnroll}
                                             disabled={enrolling || (course.price > 0 && !isPaystackLoaded)}
