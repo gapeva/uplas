@@ -79,8 +79,6 @@ const AuthPage = () => {
                 setLoginData(prev => ({ ...prev, email: signupData.email }));
                 setStatusMsg({ type: '', text: '' });
             }, 2000);
-        } else {
-             // Error is handled by store, but we can display specific field errors if needed
         }
     };
 
@@ -88,27 +86,31 @@ const AuthPage = () => {
         <section className="auth-section py-16 bg-gray-50">
             <div className="container mx-auto px-4 max-w-md">
                 
+                {/* Visual Identity - Logo Restoration */}
+                <div className="flex justify-center mb-6">
+                    <img src="/images/logo-u.svg.png" alt="Uplas" className="h-12 w-auto" />
+                </div>
+
                 {/* Tabs */}
-                <div className="flex mb-6 bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="flex mb-6 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                     <button 
-                        className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'signup' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'signup' ? 'bg-[#00b4d8] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                         onClick={() => setActiveTab('signup')}
                     >
                         Sign Up
                     </button>
                     <button 
-                        className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'login' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'login' ? 'bg-[#00b4d8] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                         onClick={() => setActiveTab('login')}
                     >
                         Login
                     </button>
                 </div>
 
-                <div className="bg-white p-8 rounded-lg shadow-md">
+                <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100">
                     
-                    {/* Global Error/Status Display */}
                     {(error || statusMsg.text) && (
-                        <div className={`mb-4 p-3 rounded ${error || statusMsg.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        <div className={`mb-4 p-3 rounded text-sm ${error || statusMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
                             {error || statusMsg.text}
                         </div>
                     )}
@@ -116,33 +118,31 @@ const AuthPage = () => {
                     {/* --- LOGIN FORM --- */}
                     {activeTab === 'login' && (
                         <form onSubmit={handleLoginSubmit} className="space-y-4">
-                            <h3 className="text-xl font-bold mb-4">Welcome Back to Uplas!</h3>
+                            <h3 className="text-xl font-bold mb-4 text-center text-gray-800">Welcome Back!</h3>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                                 <input 
                                     type="email" 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                     value={loginData.email}
                                     onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                                     required 
-                                    placeholder="you@example.com"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                                 <input 
                                     type="password" 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                     value={loginData.password}
                                     onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                                     required 
-                                    placeholder="Enter your password"
                                 />
                             </div>
                             <div className="text-right">
-                                <Link to="/forgot-password" class="text-sm text-blue-600 hover:underline">Forgot password?</Link>
+                                <Link to="/forgot-password" class="text-sm text-[#00b4d8] hover:underline">Forgot password?</Link>
                             </div>
-                            <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200" disabled={isLoading}>
+                            <button type="submit" className="w-full py-2.5 px-4 bg-[#00b4d8] text-white font-bold rounded-md hover:bg-[#0096c7] transition duration-200" disabled={isLoading}>
                                 {isLoading ? 'Logging in...' : 'Login'}
                             </button>
                         </form>
@@ -151,38 +151,34 @@ const AuthPage = () => {
                     {/* --- SIGNUP FORM --- */}
                     {activeTab === 'signup' && (
                         <form onSubmit={handleSignupSubmit} className="space-y-4">
-                            <h3 className="text-xl font-bold mb-4">Create Your Uplas Account</h3>
+                            <h3 className="text-xl font-bold mb-4 text-center text-gray-800">Create Account</h3>
                             
-                            {/* Step 1: Basic Info */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                 <input 
                                     type="text" 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md" 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                     value={signupData.fullName}
                                     onChange={(e) => setSignupData({...signupData, fullName: e.target.value})}
                                     required 
-                                    placeholder="e.g. Jane Doe"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                                 <input 
                                     type="email" 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md" 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                     value={signupData.email}
                                     onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                                     required 
-                                    placeholder="you@example.com"
                                 />
                             </div>
 
-                            {/* Step 2: Professional */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
                                     <select 
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]"
                                         value={signupData.industry}
                                         onChange={(e) => setSignupData({...signupData, industry: e.target.value})}
                                         required
@@ -200,11 +196,10 @@ const AuthPage = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Profession</label>
                                     <input 
                                         type="text" 
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md" 
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                         value={signupData.profession}
                                         onChange={(e) => setSignupData({...signupData, profession: e.target.value})}
                                         required 
-                                        placeholder="e.g. Data Analyst"
                                     />
                                 </div>
                             </div>
@@ -220,12 +215,11 @@ const AuthPage = () => {
                                 </div>
                             )}
 
-                            {/* Step 2.5: Phone Verification (ADDED) */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (WhatsApp Verification)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                 <div className="flex gap-2">
                                     <select 
-                                        className="w-1/3 px-3 py-2 border border-gray-300 rounded-md bg-white"
+                                        className="w-1/3 px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-[#00b4d8] focus:border-[#00b4d8]"
                                         value={signupData.countryCode}
                                         onChange={(e) => setSignupData({...signupData, countryCode: e.target.value})}
                                     >
@@ -237,21 +231,20 @@ const AuthPage = () => {
                                     </select>
                                     <input 
                                         type="tel" 
-                                        className="w-2/3 px-4 py-2 border border-gray-300 rounded-md" 
+                                        className="w-2/3 px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                         value={signupData.phone}
-                                        onChange={(e) => setSignupData({...signupData, phone: e.target.value.replace(/\D/g,'')})} // Enforce digits only
+                                        onChange={(e) => setSignupData({...signupData, phone: e.target.value.replace(/\D/g,'')})}
                                         placeholder="712345678"
                                         required 
                                     />
                                 </div>
                             </div>
 
-                            {/* Step 3: Password */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Create Password</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                                 <input 
                                     type="password" 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md" 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                     value={signupData.password}
                                     onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                                     required 
@@ -262,14 +255,14 @@ const AuthPage = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                                 <input 
                                     type="password" 
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md" 
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#00b4d8] focus:border-[#00b4d8]" 
                                     value={signupData.confirmPassword}
                                     onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
                                     required 
                                 />
                             </div>
 
-                            <button type="submit" className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200" disabled={isLoading}>
+                            <button type="submit" className="w-full py-2.5 px-4 bg-[#00b4d8] text-white font-bold rounded-md hover:bg-[#0096c7] transition duration-200" disabled={isLoading}>
                                 {isLoading ? 'Creating Account...' : 'Create Account'}
                             </button>
                         </form>
