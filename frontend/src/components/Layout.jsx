@@ -1,15 +1,18 @@
-import { Outlet } from 'react-router-dom'
-import Header from './Header'
-import Footer from './Footer'
+import React from 'react';
+import Header from './Header';
+import Footer from './Footer';
+import { Outlet } from 'react-router-dom';
 
-export default function Layout() {
+const Layout = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Header />
-      <main className="flex-1 pt-header">
+      <main className="main-content">
         <Outlet />
       </main>
       <Footer />
-    </div>
-  )
-}
+    </>
+  );
+};
+
+export default Layout;
