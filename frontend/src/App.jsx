@@ -20,6 +20,9 @@ import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage'; // New
 import PricingPage from './pages/PricingPage'; // New
 import AITutorPage from './pages/AITutorPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import AboutPage from './pages/AboutPage'; // And Terms, Privacy...
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useUplas();
