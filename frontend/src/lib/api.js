@@ -1,106 +1,61 @@
-import axios from 'axios'
+import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
-
+// Create Axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
-})
+});
 
-// Request interceptor to add auth token
+// Request Interceptor: Attach Token
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage (zustand persists there)
-    const authData = localStorage.getItem('uplas-auth')
-    if (authData) {
-      try {
-        const { state } = JSON.parse(authData)
-        if (state?.accessToken) {
-          config.headers.Authorization = `Bearer ${state.accessToken}`
-        }
-      } catch (e) {
-        console.error('Failed to parse auth data:', e)
-      }
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config
+    return config;
   },
   (error) => Promise.reject(error)
-)
+);
 
-// Response interceptor for token refresh
-let isRefreshing = false
-let failedQueue = []
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error)
-    } else {
-      prom.resolve(token)
-    }
-  })
-  failedQueue = []
-}
-
+// Response Interceptor: Handle Token Refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
+    const originalRequest = error.config;
 
+    // Prevent infinite loops
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            return api(originalRequest)
-          })
-          .catch((err) => Promise.reject(err))
-      }
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refresh_token');
 
-      originalRequest._retry = true
-      isRefreshing = true
+      if (refreshToken) {
+        try {
+          const response = await axios.post(`${api.defaults.baseURL}auth/token/refresh/`, {
+            refresh: refreshToken,
+          });
 
-      try {
-        const authData = localStorage.getItem('uplas-auth')
-        if (authData) {
-          const { state } = JSON.parse(authData)
-          if (state?.refreshToken) {
-            const response = await axios.post(`${API_BASE_URL}/v1/auth/token/refresh/`, {
-              refresh: state.refreshToken,
-            })
+          const newAccessToken = response.data.access;
+          localStorage.setItem('access_token', newAccessToken);
 
-            const { access, refresh } = response.data
-            
-            // Update stored tokens
-            const newState = {
-              ...state,
-              accessToken: access,
-              refreshToken: refresh || state.refreshToken,
-            }
-            localStorage.setItem('uplas-auth', JSON.stringify({ state: newState }))
-
-            processQueue(null, access)
-            originalRequest.headers.Authorization = `Bearer ${access}`
-            return api(originalRequest)
-          }
+          // Update header and retry original request
+          api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, logout user
+          console.error("Token refresh failed:", refreshError);
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = '/#auth-section'; // Redirect to login
+          return Promise.reject(refreshError);
         }
-      } catch (refreshError) {
-        processQueue(refreshError, null)
-        // Clear auth on refresh failure
-        localStorage.removeItem('uplas-auth')
-        window.location.href = '/'
-        return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
       }
     }
-
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default api
+export default api;
