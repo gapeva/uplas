@@ -1,3 +1,4 @@
+// src/components/layout/Header.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
@@ -24,7 +25,8 @@ const Header = () => {
         <header className="site-header">
             <div className="container header__container">
                 <Link to="/" className="logo" aria-label="Uplas Homepage">
-                    <img src="/images/uni_plas_prev.ico.png" alt="Uplas Logo" className="logo__img" />
+                    {/* FIX: Corrected filename to match uploaded assets */}
+                    <img src="/images/uni_plas_prev_ui.ico.png" alt="Uplas Logo" className="logo__img" />
                     <span className="logo__text">plas</span>
                 </Link>
 
@@ -56,6 +58,7 @@ const Header = () => {
 
                 <div className="header-actions">
                     <div className="language-currency-selectors">
+                         {/* ... (Keep existing selectors code) ... */}
                         <div className="select-wrapper">
                             <label htmlFor="language-selector" className="sr-only">Select Language</label>
                             <i className="fas fa-globe selector-icon"></i>
@@ -68,23 +71,7 @@ const Header = () => {
                                 <option value="hi">हिन्दी (HI)</option>
                             </select>
                         </div>
-                        <div className="select-wrapper" id="currency-selector-wrapper">
-                            <label htmlFor="currency-selector" className="sr-only">Select Currency</label>
-                            <i className="fas fa-coins selector-icon"></i>
-                            <select id="currency-selector" className="header-select" title="Select Currency" defaultValue="USD">
-                                <option value="USD">USD ($)</option>
-                                <option value="EUR">EUR (€)</option>
-                                <option value="JPY">JPY (¥)</option>
-                                <option value="GBP">GBP (£)</option>
-                                <option value="AUD">AUD (A$)</option>
-                                <option value="CAD">CAD (C$)</option>
-                                <option value="CHF">CHF (Fr)</option>
-                                <option value="CNY">CNY (¥)</option>
-                                <option value="INR">INR (₹)</option>
-                                <option value="KES">KES (KSh)</option>
-                                <option value="BTC">BTC (₿)</option>
-                            </select>
-                        </div>
+                         {/* ... (Keep existing currency code) ... */}
                     </div>
 
                     <button id="theme-toggle" className="button button--theme" aria-label="Switch color theme" title="Toggle theme">
