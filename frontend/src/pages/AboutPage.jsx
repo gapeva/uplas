@@ -1,7 +1,7 @@
 import { Github, Linkedin, Twitter, Send } from 'lucide-react';
 // Import images (Make sure these exist in your public/assets folder or update paths)
-import mugambiImg from '../assets/images/mugambi_john_ndeke.jpg.jpg'; 
-import tsionImg from '../assets/images/tsion_tamirat.jpg.jpg';
+const mugambiImg = "/images/mugambi_john_ndeke.jpg.jpg";
+const tsionImg = "/images/tsion_tamirat.jpg.jpg";
 
 export default function AboutPage() {
     return (
