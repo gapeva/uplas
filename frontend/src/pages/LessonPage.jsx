@@ -294,6 +294,15 @@ export default function LessonPage() {
                                     {isPlayingAudio ? <Pause size={16} /> : <Volume2 size={16} />} 
                                     {isPlayingAudio ? 'Stop' : 'Listen'}
                                 </button>
+
+                                {/* FIX 3: Restore TTV Button */}
+                                <button 
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                                    onClick={() => alert("Text-to-Video generation coming soon!")} 
+                                >
+                                    <Video size={16} />
+                                    <span>Watch Video</span>
+                                </button>
                             </div>
                         </div>
 
