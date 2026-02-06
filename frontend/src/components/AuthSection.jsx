@@ -1,333 +1,288 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useForm } from 'react-hook-form'
-import { ArrowRight, ArrowLeft, Eye, EyeOff } from 'lucide-react'
-import toast from 'react-hot-toast'
-import useAuthStore from '../store/authStore'
-import { cn, validateEmail, validatePassword } from '../lib/utils'
+import React, { useState } from 'react';
+import { useUplas } from '../contexts/UplasContext';
+import { useNavigate } from 'react-router-dom';
 
-export default function AuthSection() {
-  const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState('signup')
+const AuthSection = () => {
+  const { login, register, t } = useUplas();
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState('signup'); // 'signup' or 'login'
+  const [currentStep, setCurrentStep] = useState(1);
+  const [status, setStatus] = useState({ message: '', type: '' });
   
-  const handleRegistrationSuccess = () => {
-    setActiveTab('login')
-  }
-  
+  // Login State
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+
+  // Signup State
+  const [signupData, setSignupData] = useState({
+    fullName: '',
+    email: '',
+    organization: '',
+    industry: '',
+    otherIndustry: '',
+    profession: '',
+    countryCode: '+254',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    terms: false
+  });
+
+  const handleInputChange = (e, formType) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === 'checkbox' ? checked : value;
+    
+    if (formType === 'login') {
+      setLoginData(prev => ({ ...prev, [name]: val }));
+    } else {
+      setSignupData(prev => ({ ...prev, [name]: val }));
+    }
+  };
+
+  // --- Validation Logic (mimicking uhome.js) ---
+  const validateStep = (step) => {
+    if (step === 1) {
+      if (!signupData.fullName || signupData.fullName.length < 2) return false;
+    }
+    if (step === 2) {
+      if (!signupData.email || !/\S+@\S+\.\S+/.test(signupData.email)) return false;
+    }
+    if (step === 3) {
+      if (!signupData.industry) return false;
+      if (signupData.industry === 'Other' && !signupData.otherIndustry) return false;
+    }
+    if (step === 4) {
+      if (!signupData.profession) return false;
+      if (!signupData.phone || !/^[0-9]{7,15}$/.test(signupData.phone)) return false;
+    }
+    if (step === 5) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':\\|,.<>\/?]).{8,}$/;
+      if (!passwordRegex.test(signupData.password)) {
+          setStatus({message: t('form_hint_password'), type: 'error'});
+          return false;
+      }
+      if (signupData.password !== signupData.confirmPassword) {
+          setStatus({message: t('error_passwords_do_not_match'), type: 'error'});
+          return false;
+      }
+      if (!signupData.terms) {
+          setStatus({message: t('error_terms_required'), type: 'error'});
+          return false;
+      }
+    }
+    setStatus({message: '', type: ''});
+    return true;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(prev => prev - 1);
+  };
+
+  const onSignupSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateStep(5)) return;
+
+    setStatus({ message: t('signup_status_processing', 'Processing...'), type: 'loading' });
+
+    try {
+      const payload = {
+        full_name: signupData.fullName,
+        email: signupData.email,
+        organization: signupData.organization,
+        industry: signupData.industry === 'Other' ? signupData.otherIndustry : signupData.industry,
+        profession: signupData.profession,
+        whatsapp_number: `${signupData.countryCode}${signupData.phone}`,
+        password: signupData.password,
+        password2: signupData.confirmPassword // Backend expects password2 usually
+      };
+
+      await register(payload);
+      setStatus({ message: t('signup_status_success_verify_whatsapp'), type: 'success' });
+      
+      // Auto switch to login
+      setTimeout(() => {
+        setActiveTab('login');
+        setLoginData(prev => ({ ...prev, email: signupData.email }));
+      }, 2000);
+
+    } catch (err) {
+      setStatus({ message: err.response?.data?.detail || t('signup_status_error_generic'), type: 'error' });
+    }
+  };
+
+  const onLoginSubmit = async (e) => {
+    e.preventDefault();
+    setStatus({ message: t('login_status_attempting'), type: 'loading' });
+
+    try {
+      await login(loginData.email, loginData.password);
+      setStatus({ message: t('login_status_success_redirect'), type: 'success' });
+      navigate('/dashboard');
+    } catch (err) {
+      setStatus({ message: t('login_status_error_invalid_credentials'), type: 'error' });
+    }
+  };
+
   return (
-    <section id="auth-section" className="py-20">
-      <div className="container max-w-lg">
-        {/* Tab Buttons */}
-        <div className="flex bg-light-border dark:bg-dark-border rounded-lg p-1 mb-8">
-          <button
+    <section className="auth-section" id="auth-section">
+      <div className="container auth-section__container">
+        <div className="auth-toggle-buttons">
+          <button 
+            className={`auth-toggle-button ${activeTab === 'signup' ? 'active' : ''}`}
             onClick={() => setActiveTab('signup')}
-            className={cn(
-              'flex-1 py-3 rounded-lg font-medium transition-colors',
-              activeTab === 'signup'
-                ? 'bg-white dark:bg-dark-panel text-primary dark:text-secondary shadow-sm'
-                : 'text-light-text-secondary dark:text-dark-text-secondary'
-            )}
           >
-            {t('signup_tab')}
+            {t('signup_tab', 'Sign Up')}
           </button>
-          <button
+          <button 
+            className={`auth-toggle-button ${activeTab === 'login' ? 'active' : ''}`}
             onClick={() => setActiveTab('login')}
-            className={cn(
-              'flex-1 py-3 rounded-lg font-medium transition-colors',
-              activeTab === 'login'
-                ? 'bg-white dark:bg-dark-panel text-primary dark:text-secondary shadow-sm'
-                : 'text-light-text-secondary dark:text-dark-text-secondary'
-            )}
           >
-            {t('login_tab')}
+            {t('login_tab', 'Login')}
           </button>
         </div>
 
-        {/* Forms */}
-        <div className="card p-6 md:p-8">
-          {activeTab === 'signup' ? <SignupForm onSuccess={handleRegistrationSuccess} /> : <LoginForm />}
+        <div className="form-wrapper">
+          {/* --- SIGN UP FORM --- */}
+          {activeTab === 'signup' && (
+            <form id="signup-form" className="form form--active" onSubmit={onSignupSubmit} noValidate>
+              <h3 className="form__title">{t('signup_form_title', 'Create Your Uplas Account')}</h3>
+
+              {/* Step 1 */}
+              <div className={`form-step ${currentStep === 1 ? 'form-step--active' : ''}`} data-step="1">
+                <p className="form__step-indicator">{t('signup_step1_indicator', 'Step 1 of 5')}</p>
+                <div className="form__group">
+                  <label htmlFor="signup-full-name" className="form__label">{t('form_label_fullname')}</label>
+                  <input type="text" name="fullName" className="form__input" value={signupData.fullName} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_fullname')} required />
+                </div>
+                <button type="button" className="button button--primary form__button form__button--next" onClick={handleNext}>
+                  {t('form_button_next')} <i className="fas fa-arrow-right"></i>
+                </button>
+              </div>
+
+              {/* Step 2 */}
+              <div className={`form-step ${currentStep === 2 ? 'form-step--active' : ''}`} data-step="2">
+                <p className="form__step-indicator">{t('signup_step2_indicator', 'Step 2 of 5')}</p>
+                <div className="form__group">
+                  <label htmlFor="signup-email" className="form__label">{t('form_label_email')}</label>
+                  <input type="email" name="email" className="form__input" value={signupData.email} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_email')} required />
+                </div>
+                <div className="form__button-group">
+                  <button type="button" className="button button--secondary form__button form__button--prev" onClick={handlePrev}><i className="fas fa-arrow-left"></i> {t('form_button_prev')}</button>
+                  <button type="button" className="button button--primary form__button form__button--next" onClick={handleNext}>{t('form_button_next')} <i className="fas fa-arrow-right"></i></button>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className={`form-step ${currentStep === 3 ? 'form-step--active' : ''}`} data-step="3">
+                <p className="form__step-indicator">{t('signup_step3_indicator')}</p>
+                <div className="form__group">
+                    <label className="form__label">{t('form_label_organization')}</label>
+                    <input type="text" name="organization" className="form__input" value={signupData.organization} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_organization')} />
+                </div>
+                <div className="form__group">
+                    <label className="form__label">{t('form_label_industry')}</label>
+                    <select name="industry" className="form__select" value={signupData.industry} onChange={(e) => handleInputChange(e, 'signup')}>
+                        <option value="" disabled>{t('form_select_industry_placeholder')}</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                {signupData.industry === 'Other' && (
+                    <div className="form__group">
+                        <label className="form__label">{t('form_label_specify_industry')}</label>
+                        <input type="text" name="otherIndustry" className="form__input" value={signupData.otherIndustry} onChange={(e) => handleInputChange(e, 'signup')} />
+                    </div>
+                )}
+                 <div className="form__button-group">
+                  <button type="button" className="button button--secondary form__button form__button--prev" onClick={handlePrev}><i className="fas fa-arrow-left"></i> {t('form_button_prev')}</button>
+                  <button type="button" className="button button--primary form__button form__button--next" onClick={handleNext}>{t('form_button_next')} <i className="fas fa-arrow-right"></i></button>
+                </div>
+              </div>
+
+               {/* Step 4 */}
+               <div className={`form-step ${currentStep === 4 ? 'form-step--active' : ''}`} data-step="4">
+                 <p className="form__step-indicator">{t('signup_step4_indicator')}</p>
+                 <div className="form__group">
+                    <label className="form__label">{t('form_label_profession')}</label>
+                    <input type="text" name="profession" className="form__input" value={signupData.profession} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_profession')} />
+                 </div>
+                 <div className="form__group">
+                    <label className="form__label">{t('form_label_phone_whatsapp')}</label>
+                    <div className="phone-input-container">
+                        <select name="countryCode" className="form__select form__select--country-code" value={signupData.countryCode} onChange={(e) => handleInputChange(e, 'signup')}>
+                             <option value="+254">🇰🇪 +254</option>
+                             <option value="+1">🇺🇸 +1</option>
+                             <option value="+44">🇬🇧 +44</option>
+                        </select>
+                        <input type="tel" name="phone" className="form__input form__input--phone" value={signupData.phone} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_phone')} />
+                    </div>
+                 </div>
+                 <div className="form__button-group">
+                  <button type="button" className="button button--secondary form__button form__button--prev" onClick={handlePrev}><i className="fas fa-arrow-left"></i> {t('form_button_prev')}</button>
+                  <button type="button" className="button button--primary form__button form__button--next" onClick={handleNext}>{t('form_button_next')} <i className="fas fa-arrow-right"></i></button>
+                </div>
+               </div>
+
+               {/* Step 5 */}
+               <div className={`form-step ${currentStep === 5 ? 'form-step--active' : ''}`} data-step="5">
+                    <p className="form__step-indicator">{t('signup_step5_indicator')}</p>
+                    <div className="form__group">
+                        <label className="form__label">{t('form_label_create_password')}</label>
+                        <input type="password" name="password" className="form__input" value={signupData.password} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_create_password')} />
+                        <small className="form__hint">{t('form_hint_password')}</small>
+                    </div>
+                    <div className="form__group">
+                        <label className="form__label">{t('form_label_confirm_password')}</label>
+                        <input type="password" name="confirmPassword" className="form__input" value={signupData.confirmPassword} onChange={(e) => handleInputChange(e, 'signup')} placeholder={t('form_placeholder_confirm_password')} />
+                    </div>
+                    <div className="form__group form__group--checkbox">
+                        <input type="checkbox" id="signup-terms" name="terms" checked={signupData.terms} onChange={(e) => handleInputChange(e, 'signup')} required />
+                        <label htmlFor="signup-terms" className="form__label--checkbox">
+                            <span dangerouslySetInnerHTML={{__html: t('form_label_terms_agree') + " <a href='/terms'>" + t('form_label_terms_link') + "</a> " + t('form_label_terms_and') + " <a href='/privacy'>" + t('form_label_privacy_link') + "</a>"}} />
+                        </label>
+                    </div>
+                    <div className="form__button-group">
+                      <button type="button" className="button button--secondary form__button form__button--prev" onClick={handlePrev}><i className="fas fa-arrow-left"></i> {t('form_button_prev')}</button>
+                      <button type="submit" className="button button--primary form__button form__button--submit">{t('form_button_create_account', 'Create Account')}</button>
+                    </div>
+               </div>
+               
+               {/* Status Display */}
+               {status.message && <div className={`form__status form__status--${status.type}`} style={{display: 'block'}}>{status.message}</div>}
+            </form>
+          )}
+
+          {/* --- LOGIN FORM --- */}
+          {activeTab === 'login' && (
+            <form id="login-form" className="form form--active" onSubmit={onLoginSubmit} noValidate>
+               <h3 className="form__title">{t('login_form_title', 'Welcome Back to Uplas!')}</h3>
+               <div className="form__group">
+                   <label htmlFor="login-email" className="form__label">{t('form_label_email')}</label>
+                   <input type="email" name="email" className="form__input" value={loginData.email} onChange={(e) => handleInputChange(e, 'login')} placeholder={t('form_placeholder_email')} required />
+               </div>
+               <div className="form__group">
+                   <label htmlFor="login-password" className="form__label">{t('form_label_password')}</label>
+                   <input type="password" name="password" className="form__input" value={loginData.password} onChange={(e) => handleInputChange(e, 'login')} placeholder={t('form_placeholder_password')} required />
+               </div>
+               <div className="form__group form__group--subtle-text">
+                   <Link to="/forgot-password" className="form__link">{t('form_link_forgot_password', 'Forgot password?')}</Link>
+               </div>
+               <button type="submit" className="button button--primary form__button form__button--submit">{t('form_button_login', 'Login')}</button>
+               
+               {status.message && <div className={`form__status form__status--${status.type}`} style={{display: 'block'}}>{status.message}</div>}
+            </form>
+          )}
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-function SignupForm({ onSuccess }) {
-  const { t } = useTranslation()
-  const [step, setStep] = useState(1)
-  const [showPassword, setShowPassword] = useState(false)
-  const { register: registerUser, login, isLoading } = useAuthStore()
-  
-  const { register, handleSubmit, watch, formState: { errors }, trigger } = useForm()
-  const password = watch('password')
-
-  const industries = [
-    'Technology', 'Healthcare', 'Finance & Banking', 'Education',
-    'Manufacturing & Engineering', 'Retail & E-commerce',
-    'Marketing & Advertising', 'Arts & Entertainment', 'Student', 'Other'
-  ]
-
-  const nextStep = async () => {
-    const fieldsToValidate = {
-      1: ['fullName'],
-      2: ['email'],
-      3: ['industry'],
-      4: ['profession', 'phone'],
-    }
-    
-    const isValid = await trigger(fieldsToValidate[step])
-    if (isValid && step < 5) setStep(step + 1)
-  }
-
-  const onSubmit = async (data) => {
-    const userData = {
-      full_name: data.fullName,
-      email: data.email,
-      password: data.password,
-      organization: data.organization || '',
-      industry: data.industry,
-      profession: data.profession,
-      phone: data.phone,
-    }
-
-    const result = await registerUser(userData)
-    if (result.success) {
-      toast.success('Account created! Logging you in...')
-      // Auto-login after successful registration
-      const loginResult = await login(data.email, data.password)
-      if (loginResult.success) {
-        toast.success('Welcome to Uplas!')
-        window.location.href = '/dashboard'
-      } else {
-        // If auto-login fails, switch to login tab
-        toast.success('Account created! Please login.')
-        setStep(1)
-        onSuccess?.()
-      }
-    } else {
-      toast.error(result.error || 'Registration failed. Please try again.')
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <h3 className="text-xl font-semibold mb-2">{t('signup_title')}</h3>
-      <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-6">
-        Step {step} of 5
-      </p>
-
-      {/* Step 1: Full Name */}
-      {step === 1 && (
-        <div className="animate-fade-in">
-          <label className="label">{t('label_fullname')}</label>
-          <input
-            {...register('fullName', { required: 'Full name is required', minLength: { value: 2, message: 'Name too short' } })}
-            className={cn('input', errors.fullName && 'error')}
-            placeholder={t('placeholder_fullname')}
-          />
-          {errors.fullName && <p className="text-error text-sm mt-1">{errors.fullName.message}</p>}
-        </div>
-      )}
-
-      {/* Step 2: Email */}
-      {step === 2 && (
-        <div className="animate-fade-in">
-          <label className="label">{t('label_email')}</label>
-          <input
-            {...register('email', { required: 'Email is required', validate: v => validateEmail(v) || 'Invalid email' })}
-            type="email"
-            className={cn('input', errors.email && 'error')}
-            placeholder={t('placeholder_email')}
-          />
-          {errors.email && <p className="text-error text-sm mt-1">{errors.email.message}</p>}
-        </div>
-      )}
-
-      {/* Step 3: Industry & Organization */}
-      {step === 3 && (
-        <div className="animate-fade-in space-y-4">
-          <div>
-            <label className="label">{t('label_organization')} (Optional)</label>
-            <input
-              {...register('organization')}
-              className="input"
-              placeholder={t('placeholder_organization')}
-            />
-          </div>
-          <div>
-            <label className="label">{t('label_industry')}</label>
-            <select
-              {...register('industry', { required: 'Please select an industry' })}
-              className={cn('input', errors.industry && 'error')}
-            >
-              <option value="">Select your industry...</option>
-              {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-            </select>
-            {errors.industry && <p className="text-error text-sm mt-1">{errors.industry.message}</p>}
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Profession & Phone */}
-      {step === 4 && (
-        <div className="animate-fade-in space-y-4">
-          <div>
-            <label className="label">{t('label_profession')}</label>
-            <input
-              {...register('profession', { required: 'Profession is required' })}
-              className={cn('input', errors.profession && 'error')}
-              placeholder={t('placeholder_profession')}
-            />
-            {errors.profession && <p className="text-error text-sm mt-1">{errors.profession.message}</p>}
-          </div>
-          <div>
-            <label className="label">{t('label_phone')}</label>
-            <input
-              {...register('phone', { required: 'Phone number is required' })}
-              type="tel"
-              className={cn('input', errors.phone && 'error')}
-              placeholder="e.g., +1 234 567 8900"
-            />
-            {errors.phone && <p className="text-error text-sm mt-1">{errors.phone.message}</p>}
-          </div>
-        </div>
-      )}
-
-      {/* Step 5: Password */}
-      {step === 5 && (
-        <div className="animate-fade-in space-y-4">
-          <div>
-            <label className="label">{t('label_password')}</label>
-            <div className="relative">
-              <input
-                {...register('password', { 
-                  required: 'Password is required',
-                  validate: v => validatePassword(v) || 'Password must be 8+ chars with uppercase, lowercase, number, and special char'
-                })}
-                type={showPassword ? 'text' : 'password'}
-                className={cn('input pr-12', errors.password && 'error')}
-                placeholder={t('placeholder_password')}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-            <p className="text-xs text-light-text-secondary mt-1">{t('password_hint')}</p>
-            {errors.password && <p className="text-error text-sm mt-1">{errors.password.message}</p>}
-          </div>
-          <div>
-            <label className="label">{t('label_confirm_password')}</label>
-            <input
-              {...register('confirmPassword', { 
-                required: 'Please confirm password',
-                validate: v => v === password || 'Passwords do not match'
-              })}
-              type="password"
-              className={cn('input', errors.confirmPassword && 'error')}
-              placeholder={t('placeholder_confirm_password')}
-            />
-            {errors.confirmPassword && <p className="text-error text-sm mt-1">{errors.confirmPassword.message}</p>}
-          </div>
-          <div className="flex items-start gap-2">
-            <input
-              {...register('terms', { required: 'You must agree to the terms' })}
-              type="checkbox"
-              id="terms"
-              className="mt-1"
-            />
-            <label htmlFor="terms" className="text-sm">
-              {t('terms_agree')} <a href="/terms" className="link">{t('terms_link')}</a> {t('and')} <a href="/privacy" className="link">{t('privacy_link')}</a>
-            </label>
-          </div>
-          {errors.terms && <p className="text-error text-sm">{errors.terms.message}</p>}
-        </div>
-      )}
-
-      {/* Navigation Buttons */}
-      <div className="flex gap-3 mt-6">
-        {step > 1 && (
-          <button type="button" onClick={() => setStep(step - 1)} className="btn btn-secondary flex-1">
-            <ArrowLeft size={18} /> {t('btn_previous')}
-          </button>
-        )}
-        {step < 5 ? (
-          <button type="button" onClick={nextStep} className="btn btn-primary flex-1">
-            {t('btn_next')} <ArrowRight size={18} />
-          </button>
-        ) : (
-          <button type="submit" disabled={isLoading} className="btn btn-primary flex-1">
-            {isLoading ? 'Creating...' : t('btn_create_account')}
-          </button>
-        )}
-      </div>
-    </form>
-  )
-}
-
-function LoginForm() {
-  const { t } = useTranslation()
-  const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoading } = useAuthStore()
-  const { register, handleSubmit, formState: { errors } } = useForm()
-
-  const onSubmit = async (data) => {
-    const result = await login(data.email, data.password)
-    if (result.success) {
-      toast.success('Welcome back!')
-      window.location.href = '/dashboard'
-    } else {
-      toast.error(result.error || 'Login failed. Please check your credentials.')
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <h3 className="text-xl font-semibold mb-6">{t('login_title')}</h3>
-
-      <div className="space-y-4">
-        <div>
-          <label className="label">{t('label_email')}</label>
-          <input
-            {...register('email', { required: 'Email is required' })}
-            type="email"
-            className={cn('input', errors.email && 'error')}
-            placeholder={t('placeholder_email')}
-          />
-          {errors.email && <p className="text-error text-sm mt-1">{errors.email.message}</p>}
-        </div>
-
-        <div>
-          <label className="label">{t('label_password')}</label>
-          <div className="relative">
-            <input
-              {...register('password', { required: 'Password is required' })}
-              type={showPassword ? 'text' : 'password'}
-              className={cn('input pr-12', errors.password && 'error')}
-              placeholder={t('placeholder_password')}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          {errors.password && <p className="text-error text-sm mt-1">{errors.password.message}</p>}
-        </div>
-
-        <div className="text-right">
-          <a href="/forgot-password" className="text-sm link">{t('forgot_password')}</a>
-        </div>
-      </div>
-
-      <button type="submit" disabled={isLoading} className="btn btn-primary w-full mt-6">
-        {isLoading ? 'Logging in...' : t('btn_login')}
-      </button>
-    </form>
-  )
-}
+export default AuthSection;
