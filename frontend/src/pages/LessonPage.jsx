@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
     Menu, X, CheckCircle, Lock, Play, MessageSquare, 
-    Volume2, Video, Bookmark, Send, Settings, BookOpen, Pause 
+    Volume2, Video, Bookmark, Send, Settings, BookOpen, Pause, FileText
 } from 'lucide-react';
 import api from '../lib/api';
+// Ensure mcourse.css is imported in main.jsx or here
+import '../styles/mcourse.css'; 
 
 export default function LessonPage() {
     const { courseSlug, topicId } = useParams();
@@ -184,184 +186,155 @@ export default function LessonPage() {
         }
     };
 
-    if (loading) return <div className="h-screen flex items-center justify-center text-gray-500">Loading classroom...</div>;
+    if (loading) return <div className="loading-container">Loading classroom...</div>;
 
     return (
-        <div className="flex h-[calc(100vh-64px)] bg-gray-100 overflow-hidden relative">
-            
-            {/* --- LEFT SIDEBAR (Navigation) --- */}
-            <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white border-r transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 flex flex-col`}>
-                <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
-                    <h2 className="font-bold text-gray-800 truncate" title={courseNav?.title}>{courseNav?.title}</h2>
-                    <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500"><X size={20}/></button>
-                </div>
+        /* Legacy Wrapper: mcourse-main-content */
+        <main className="mcourse-main-content" id="main-content-area" role="main">
+            <div className="learning-environment-grid">
                 
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                    {courseNav?.modules?.map((module, i) => (
-                        <div key={module.id}>
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Module {i+1}: {module.title}</h3>
-                            <ul className="space-y-1">
-                                {module.topics?.map(topic => (
-                                    <li key={topic.id}>
-                                        <Link 
-                                            to={`/courses/${courseSlug}/learn/${topic.id}`}
-                                            className={`flex items-center justify-between p-2 rounded text-sm transition ${
-                                                currentTopic?.id === topic.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
-                                            } ${topic.is_locked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            <span className="truncate">{topic.title}</span>
-                                            {topic.is_completed ? <CheckCircle size={14} className="text-green-500"/> : topic.is_locked ? <Lock size={14} className="text-gray-400"/> : <div className="w-3.5 h-3.5 border rounded-full"></div>}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
+                {/* --- LEFT SIDEBAR (Legacy Class: learning-sidebar learning-sidebar--left) --- */}
+                <aside className={`learning-sidebar learning-sidebar--left ${!sidebarOpen ? 'hidden-mobile' : ''}`}>
+                    <div className="sidebar-section">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="sidebar-title">Course Navigation</h3>
+                            <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500"><X size={20}/></button>
                         </div>
-                    ))}
-                </div>
-
-                {/* --- RESTORED: Progress Section --- */}
-                <div className="p-5 border-t bg-gray-50">
-                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Your Progress</h4>
-                    <div className="flex justify-between text-sm mb-1">
-                        <span>Completion</span>
-                        <span className="font-bold">{progress.percentage || 0}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${progress.percentage || 0}%` }}></div>
-                    </div>
-                </div>
-            </aside>
-
-            {/* --- MAIN CONTENT AREA --- */}
-            <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                
-                {/* Header */}
-                <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-gray-600"><Menu/></button>
-                        <h1 className="text-lg font-bold text-gray-800 truncate">{currentTopic?.title}</h1>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition" title="Bookmark"><Bookmark size={20} /></button>
-                        {/* Wired "Discuss" button to Mobile AI Tutor */}
-                        <button 
-                            className={`p-2 rounded-full transition ${aiTutorOpen ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}
-                            title="Discuss / AI Tutor"
-                            onClick={() => setAiTutorOpen(!aiTutorOpen)}
-                        >
-                            <MessageSquare size={20} />
-                        </button>
-                    </div>
-                </header>
-
-                {/* Content & QnA Scroll Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-100">
-                    <div className="max-w-3xl mx-auto space-y-6">
                         
-                        {/* Chat History */}
-                        <div className="space-y-4 mb-8">
-                            {messages.map((msg, idx) => (
-                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[80%] rounded-2xl px-5 py-4 shadow-sm text-sm leading-relaxed ${
-                                        msg.role === 'user' 
-                                        ? 'bg-[#00b4d8] text-white rounded-br-none' 
-                                        : 'bg-white text-gray-800 border rounded-bl-none'
-                                    }`}>
-                                        <div dangerouslySetInnerHTML={{ __html: msg.text }} />
-                                    </div>
+                        <nav id="course-module-topic-nav" className="module-topic-nav">
+                            {courseNav?.modules?.map((module, i) => (
+                                <div key={module.id} className="module-group mb-4">
+                                    <h4 className="module-title-btn text-xs font-bold uppercase tracking-wider mb-2 text-gray-500">
+                                        Module {i+1}: {module.title}
+                                    </h4>
+                                    <ul className="topic-list-nav space-y-1">
+                                        {module.topics?.map(topic => (
+                                            <li key={topic.id}>
+                                                <Link 
+                                                    to={`/courses/${courseSlug}/learn/${topic.id}`}
+                                                    className={`topic-link-nav flex items-center justify-between p-2 rounded text-sm transition ${
+                                                        currentTopic?.id === topic.id ? 'active bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                                                    } ${topic.is_locked ? 'locked opacity-50 cursor-not-allowed' : ''}`}
+                                                >
+                                                    <span className="truncate">{topic.title}</span>
+                                                    {topic.is_completed ? <CheckCircle size={14} className="text-green-500"/> : topic.is_locked ? <Lock size={14} className="text-gray-400"/> : <div className="w-3.5 h-3.5 border rounded-full"></div>}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
                             ))}
-                        </div>
-
-                        {/* Media Controls */}
-                        <div className="bg-white p-4 rounded-xl shadow-sm border flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <select 
-                                    className="bg-gray-100 border-none rounded-lg text-sm px-3 py-2 cursor-pointer"
-                                    value={selectedVoice}
-                                    onChange={(e) => setSelectedVoice(e.target.value)}
-                                >
-                                    <option value="alloy">Alloy</option>
-                                    <option value="echo">Echo</option>
-                                    <option value="fable">Fable</option>
-                                </select>
-                                <button onClick={handleTTS} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition ${isPlayingAudio ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700'}`}>
-                                    {isPlayingAudio ? <Pause size={16} /> : <Volume2 size={16} />} 
-                                    {isPlayingAudio ? 'Stop' : 'Listen'}
-                                </button>
-
-                                {/* FIX: Functional TTV Button */}
-                                <button 
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-100 text-[#00b4d8] hover:bg-blue-200 transition"
-                                    onClick={() => setShowVideoModal(true)} 
-                                >
-                                    <Video size={16} />
-                                    <span>Watch Video</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* User Input Area */}
-                        <form onSubmit={handleAnswerSubmit} className="bg-white p-2 rounded-xl shadow-lg border relative">
-                            <textarea 
-                                className="w-full border-none focus:ring-0 resize-none p-3 text-gray-700 min-h-[80px]"
-                                placeholder="Type your answer here..."
-                                value={userAnswer}
-                                onChange={(e) => setUserAnswer(e.target.value)}
-                                disabled={isSubmitting}
-                            ></textarea>
-                            <div className="flex justify-between items-center px-3 pb-2">
-                                {feedback && (
-                                    <span className={`text-xs font-bold ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                                        {feedback.text}
-                                    </span>
-                                )}
-                                <button type="submit" disabled={isSubmitting || !userAnswer.trim()} className="ml-auto bg-[#00b4d8] text-white p-2 rounded-lg hover:bg-[#0096c7] disabled:opacity-50">
-                                    <Send size={18} />
-                                </button>
-                            </div>
-                        </form>
+                        </nav>
                     </div>
-                </div>
-            </main>
 
-            {/* --- RIGHT SIDEBAR (AI Tutor - Desktop) --- */}
-            <aside className="hidden lg:flex flex-col w-80 bg-white border-l z-30">
-                <div className="p-5 border-b bg-blue-50/50">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-2"><Settings size={18} className="text-[#00b4d8]"/> AI Tutor</h3>
-                    <p className="text-xs text-gray-600">Ask any questions about this topic.</p>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
-                     {tutorMessages.map((msg, i) => (
-                        <div key={i} className={`p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-100 ml-4' : 'bg-white shadow-sm mr-4'}`}>
-                            {msg.text}
+                    <div className="sidebar-section">
+                        <h3 className="sidebar-title">Your Progress</h3>
+                        <div className="progress-overview-simple">
+                            <p><span>Topic Completion:</span> <strong id="topic-progress-percentage">{progress.percentage || 0}%</strong></p>
+                            <div className="progress-bar-container small-progress w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div className="progress-bar-fill bg-green-500 h-2 rounded-full" id="topic-progress-bar" style={{ width: `${progress.percentage || 0}%` }}></div>
+                            </div>
+                            <p><span>XP Points:</span> <strong id="user-xp-points">{progress.xp || 0}</strong></p>
+                            <p><span>Badges:</span> <strong id="user-badges-count">{progress.badges || 0}</strong></p>
                         </div>
-                     ))}
-                     {isTutorThinking && <div className="text-xs text-gray-400 italic">Thinking...</div>}
-                </div>
-                <form onSubmit={handleTutorAsk} className="p-3 bg-white border-t flex gap-2">
-                    <input 
-                        type="text" 
-                        value={tutorQuery}
-                        onChange={(e) => setTutorQuery(e.target.value)}
-                        className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" 
-                        placeholder="Ask the tutor..." 
-                    />
-                    <button type="submit" className="bg-[#00b4d8] text-white p-2 rounded-lg"><Send size={18}/></button>
-                </form>
-            </aside>
+                    </div>
+                </aside>
 
-            {/* --- MOBILE AI TUTOR (Slide-over / Modal) --- */}
-            {aiTutorOpen && (
-                <div className="lg:hidden absolute inset-0 z-50 bg-black/50">
-                    <div className="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl flex flex-col animate-slide-in">
-                        <div className="p-4 border-b flex justify-between items-center bg-blue-50/50">
-                            <h3 className="font-bold text-gray-800 flex items-center gap-2"><Settings size={18} className="text-[#00b4d8]"/> AI Tutor</h3>
-                            <button onClick={() => setAiTutorOpen(false)} className="text-gray-500 hover:text-red-500">
-                                <X size={20} />
+                {/* --- CENTER: INTERACTION AREA (Legacy Class: learning-interaction-area) --- */}
+                <section className="learning-interaction-area" aria-labelledby="current-topic-title-main">
+                    
+                    {/* Header */}
+                    <header className="topic-header-main flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-gray-600"><Menu/></button>
+                            <h2 id="current-topic-title-main" className="current-topic-title-text text-2xl font-bold text-gray-800">
+                                {currentTopic?.title}
+                            </h2>
+                        </div>
+                        <div className="topic-actions flex gap-2">
+                            <button className="topic-action-btn p-2 text-gray-500 hover:text-blue-600" title="Bookmark">
+                                <Bookmark size={20} />
+                            </button>
+                            <button className="topic-action-btn p-2 text-gray-500 hover:text-blue-600" title="Discuss">
+                                <MessageSquare size={20} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
+                    </header>
+
+                    {/* Chat / Content Area */}
+                    <div className="qna-content-area space-y-4 mb-6" id="qna-content-area" role="log">
+                        {messages.map((msg, idx) => (
+                            <div key={idx} className={`message-bubble ${msg.role === 'user' ? 'user-answer-bubble ml-auto bg-[#00b4d8] text-white' : 'ai-question-bubble mr-auto bg-white border border-gray-200 text-gray-800'} max-w-[80%] rounded-2xl px-5 py-4 shadow-sm text-sm leading-relaxed`}>
+                                <div dangerouslySetInnerHTML={{ __html: msg.text }} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Media Controls */}
+                    <div className="media-controls-area bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div className="tts-controls flex items-center gap-3">
+                            <select 
+                                id="tts-voice-character-select"
+                                className="form__select form__select--compact bg-gray-100 border-none rounded-lg text-sm px-3 py-2 cursor-pointer"
+                                value={selectedVoice}
+                                onChange={(e) => setSelectedVoice(e.target.value)}
+                            >
+                                <option value="alloy">Alloy</option>
+                                <option value="echo">Echo</option>
+                                <option value="fable">Fable</option>
+                            </select>
+                            <button 
+                                id="play-tts-btn"
+                                onClick={handleTTS} 
+                                className={`button button--secondary button--small media-control-button flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition ${isPlayingAudio ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700'}`}
+                            >
+                                {isPlayingAudio ? <Pause size={16} /> : <Volume2 size={16} />} 
+                                <span>{isPlayingAudio ? 'Stop' : 'Listen'}</span>
+                            </button>
+                        </div>
+                        <div className="ttv-controls">
+                            <button 
+                                id="generate-ttv-btn"
+                                className="button button--secondary button--small media-control-button flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-100 text-[#00b4d8] hover:bg-blue-200 transition"
+                                onClick={() => setShowVideoModal(true)} 
+                            >
+                                <Video size={16} />
+                                <span>Watch Video</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Answer Form */}
+                    <form id="user-answer-form" className="user-input-form bg-white p-2 rounded-xl shadow-lg border relative" onSubmit={handleAnswerSubmit}>
+                        <textarea 
+                            id="user-answer-input"
+                            className="form__textarea w-full border-none focus:ring-0 resize-none p-3 text-gray-700 min-h-[80px]"
+                            placeholder="Type your answer here..."
+                            value={userAnswer}
+                            onChange={(e) => setUserAnswer(e.target.value)}
+                            disabled={isSubmitting}
+                        ></textarea>
+                        <div className="flex justify-between items-center px-3 pb-2">
+                            {feedback && (
+                                <span className={`answer-feedback-display text-xs font-bold ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {feedback.text}
+                                </span>
+                            )}
+                            <button type="submit" className="button button--primary ml-auto bg-[#00b4d8] text-white p-2 rounded-lg hover:bg-[#0096c7]" disabled={isSubmitting || !userAnswer.trim()}>
+                                <Send size={18} />
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                {/* --- RIGHT SIDEBAR: AI TUTOR (Legacy Class: learning-sidebar learning-sidebar--right) --- */}
+                <aside className="learning-sidebar learning-sidebar--right hidden lg:block">
+                    <div className="sidebar-section ai-tutor-panel-preview">
+                        <h3 className="sidebar-title flex items-center gap-2">
+                            <Settings size={18} className="text-[#00b4d8]"/> AI Tutor
+                        </h3>
+                        
+                        <div className="ai-tutor-messages-area flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4 h-[400px] mb-4 border rounded">
                             {tutorMessages.map((msg, i) => (
                                 <div key={i} className={`p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-100 ml-4' : 'bg-white shadow-sm mr-4'}`}>
                                     {msg.text}
@@ -369,21 +342,52 @@ export default function LessonPage() {
                             ))}
                             {isTutorThinking && <div className="text-xs text-gray-400 italic">Thinking...</div>}
                         </div>
-                        <form onSubmit={handleTutorAsk} className="p-3 bg-white border-t flex gap-2">
+
+                        <form id="ai-tutor-input-form" className="ai-tutor-input-area flex gap-2" onSubmit={handleTutorAsk}>
                             <input 
                                 type="text" 
+                                id="ai-tutor-message-input"
                                 value={tutorQuery}
                                 onChange={(e) => setTutorQuery(e.target.value)}
-                                className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" 
-                                placeholder="Ask AI..." 
+                                className="form__input flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" 
+                                placeholder="Ask the tutor..." 
                             />
-                            <button type="submit" className="bg-[#00b4d8] text-white p-2 rounded-lg"><Send size={18}/></button>
+                            <button type="submit" className="button button--primary bg-[#00b4d8] text-white p-2 rounded-lg"><Send size={18}/></button>
                         </form>
+                        
+                        <div className="sidebar-section mt-6">
+                            <h3 className="sidebar-title">Topic Resources</h3>
+                            <ul id="topic-resources-list" className="resource-list-sidebar space-y-2 text-sm text-gray-600">
+                                <li><a href="#" className="flex items-center gap-2 hover:text-blue-500"><FileText size={14}/> Key Definitions PDF</a></li>
+                                <li><a href="#" className="flex items-center gap-2 hover:text-blue-500"><BookOpen size={14}/> Further Reading</a></li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-            )}
+                </aside>
+                
+                {/* --- MOBILE AI TUTOR MODAL --- */}
+                {aiTutorOpen && (
+                    <div className="lg:hidden absolute inset-0 z-50 bg-black/50">
+                        <div className="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl flex flex-col">
+                            <div className="p-4 border-b flex justify-between items-center bg-blue-50/50">
+                                <h3 className="font-bold text-gray-800">AI Tutor</h3>
+                                <button onClick={() => setAiTutorOpen(false)}><X size={20}/></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                {tutorMessages.map((msg, i) => (
+                                    <div key={i} className={`p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}>{msg.text}</div>
+                                ))}
+                            </div>
+                            <form className="p-3 border-t flex gap-2" onSubmit={handleTutorAsk}>
+                                <input type="text" value={tutorQuery} onChange={(e)=>setTutorQuery(e.target.value)} className="flex-1 border rounded px-2" placeholder="Ask AI..."/>
+                                <button type="submit" className="bg-[#00b4d8] text-white p-2 rounded"><Send size={18}/></button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
 
-            {/* --- VIDEO MODAL (TTV Implementation) --- */}
+            {/* --- VIDEO MODAL (TTV) --- */}
             {showVideoModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4">
                     <div className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl">
@@ -394,17 +398,15 @@ export default function LessonPage() {
                             <X size={24} />
                         </button>
                         <div className="aspect-video flex items-center justify-center bg-gray-900 text-white">
-                             {/* Placeholder for actual TTV stream or Video URL */}
                              <div className="text-center">
                                 <Video size={64} className="mx-auto mb-4 text-[#00b4d8] opacity-50"/>
                                 <h3 className="text-xl font-bold">AI Video Lesson</h3>
                                 <p className="text-gray-400 mt-2">Generating visual explanation for: <span className="text-white italic">"{currentTopic?.title}"</span></p>
-                                <p className="text-xs text-gray-500 mt-4">(Integration ready: Connect backend TTV stream source here)</p>
                              </div>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </main>
     );
 }
