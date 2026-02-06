@@ -4,7 +4,9 @@ import { UplasProvider, useUplas } from './contexts/UplasContext';
 import Layout from './components/Layout';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import AuthPage from './pages/AuthPage'; // Added
+import AuthPage from './pages/AuthPage'; 
+import TermsPage from './pages/TermsPage'; 
+import PrivacyPage from './pages/PrivacyPage';
 
 // Pages
 import Home from './pages/HomePage';
@@ -68,14 +70,17 @@ const App = () => {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/ai-tutor" element={<AITutorPage />} />
 
-            {/* Dashboard */}
-            <Route path="/dashboard" element={
-                <ProtectedRoute><DashboardPage /></ProtectedRoute>
-            } />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
 
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/about" element={<AboutPage />} />
+
+            {/* Dashboard */}
+            <Route path="/dashboard" element={
+                <ProtectedRoute><DashboardPage /></ProtectedRoute>
+            } />
               
             {/* Specific Route for Learning Interface */}
             <Route path="/courses/:courseSlug/learn/:topicId?" element={
