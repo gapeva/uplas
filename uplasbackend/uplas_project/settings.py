@@ -65,27 +65,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'uplas_project.wsgi.application'
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'NAME': os.getenv('MYSQL_DATABASE', 'uplas_db'),
-#        'USER': os.getenv('MYSQL_USER', 'root'),
-#        'PASSWORD': os.getenv('MYSQL_PASSWORD', 'password'),
-#        'HOST': os.getenv('MYSQL_HOST', '127.0.0.1'),
-#        'PORT': os.getenv('MYSQL_PORT', '3306'),
-#        'OPTIONS': { 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'" },
-#    }
-#}
+# Database Configuration - supports SQLite (dev) and PostgreSQL (production)
+DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite')
 
-
-# NEW TEMPORARY SQLITE CONFIG
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'uplas_db'),
+            'USER': os.getenv('POSTGRES_USER', 'uplas_user'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        }
     }
-}
+else:
+    # SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
+# Gemini API Configuration
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -136,6 +140,14 @@ LANGUAGE_CHOICES = [
     ('hi', _('Hindi')),
 ]
 
+# Paystack Configuration
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 
-STRIPE_SECRET_KEY = os.getenv('STRIPE_KEY') 
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+# Frontend URL for callbacks
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+
+# Static and Media files for production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'mediafiles'

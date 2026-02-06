@@ -5,7 +5,7 @@ from .views import (
     SubscriptionPlanViewSet,
     UserSubscriptionViewSet,
     PaymentTransactionViewSet,
-    StripeWebhookAPIView
+    PaystackWebhookAPIView
 )
 
 app_name = 'payments'
@@ -17,5 +17,5 @@ router.register(r'transactions', PaymentTransactionViewSet, basename='payment-tr
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('stripe/webhook/', StripeWebhookAPIView.as_view(), name='stripe-webhook'),
+    path('paystack/webhook/', PaystackWebhookAPIView.as_view(), name='paystack-webhook'),
 ]

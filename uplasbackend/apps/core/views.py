@@ -1,11 +1,42 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework.permissions import AllowAny
 from django.utils.translation import gettext_lazy as _
+from django.db import connection
+import time
 
 # from rest_framework import viewsets # Example if you add concrete models
 # from .models import SystemSetting, FAQ # Example
 # from .serializers import SystemSettingSerializer, FAQSerializer # Example
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    Health check endpoint for monitoring and load balancers.
+    Returns service status, database connectivity, and response time.
+    """
+    start_time = time.time()
+    
+    # Check database connectivity
+    db_status = "healthy"
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+    
+    response_time_ms = int((time.time() - start_time) * 1000)
+    
+    return Response({
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "service": "Uplas Backend API",
+        "version": "1.0.0",
+        "database": db_status,
+        "response_time_ms": response_time_ms,
+    })
+
 
 @api_view(['GET'])
 def api_root(request, format=None):

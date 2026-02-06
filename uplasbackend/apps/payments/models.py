@@ -21,31 +21,37 @@ SUBSCRIPTION_STATUS_CHOICES = [
     ('past_due', _('Past Due')),
     ('cancelled', _('Cancelled')),
     ('incomplete', _('Incomplete')),
-    ('pending_cancellation', _('Pending Cancellation')),
+    ('pending', _('Pending')),
 ]
 
 PAYMENT_STATUS_CHOICES = [
     ('pending', _('Pending')),
-    ('succeeded', _('Succeeded')),
+    ('completed', _('Completed')),
     ('failed', _('Failed')),
     ('refunded', _('Refunded')),
+]
+
+PAYMENT_METHOD_CHOICES = [
+    ('paystack', _('Paystack')),
+    ('bank_transfer', _('Bank Transfer')),
+    ('card', _('Card')),
 ]
 
 
 # --- Models ---
 class SubscriptionPlan(BaseModel):
     """
-    Defines a subscription plan available for users (e.g., Basic, Premium).
+    Defines a subscription plan available for users (e.g., Free, Pro Monthly, Pro Yearly).
     """
     name = models.CharField(max_length=150, unique=True, verbose_name=_('Plan Name'))
     description = models.TextField(blank=True, null=True, verbose_name=_('Description'))
-    stripe_price_id = models.CharField(max_length=255, unique=True, verbose_name=_('Stripe Price ID'), help_text=_("The ID of the Price object in Stripe (e.g., price_xxxxxxxxxxxxxx)"))
+    paystack_plan_code = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Paystack Plan Code'), help_text=_("The plan code from Paystack"))
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_('Price'))
-    currency = models.CharField(max_length=3, choices=settings.CURRENCY_CHOICES, default='USD', verbose_name=_('Currency'))
+    currency = models.CharField(max_length=3, choices=settings.CURRENCY_CHOICES, default='NGN', verbose_name=_('Currency'))
     billing_cycle = models.CharField(max_length=20, choices=BILLING_CYCLE_CHOICES, default='monthly', verbose_name=_('Billing Cycle'))
-    features = models.JSONField(default=dict, blank=True, help_text=_("Key-value pairs of features for this plan."))
-    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'), help_text=_("Inactive plans are not offered to new subscribers."))
-    display_order = models.PositiveIntegerField(default=0, help_text=_("Order for displaying plans, lower numbers first."))
+    features = models.JSONField(default=list, blank=True, help_text=_("List of features for this plan."))
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
+    display_order = models.PositiveIntegerField(default=0)
 
     class Meta:
         verbose_name = _('Subscription Plan')
@@ -62,10 +68,11 @@ class UserSubscription(BaseModel):
     """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscription', verbose_name=_('User'))
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, related_name='subscriptions', verbose_name=_('Plan'))
-    stripe_subscription_id = models.CharField(max_length=255, unique=True, verbose_name=_('Stripe Subscription ID'))
-    stripe_customer_id = models.CharField(max_length=255, verbose_name=_('Stripe Customer ID'))
-    status = models.CharField(max_length=30, choices=SUBSCRIPTION_STATUS_CHOICES, default='incomplete', verbose_name=_('Status'))
-    current_period_end = models.DateTimeField(null=True, blank=True, verbose_name=_('Current Period End'))
+    paystack_subscription_code = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Paystack Subscription Code'))
+    paystack_customer_code = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Paystack Customer Code'))
+    status = models.CharField(max_length=30, choices=SUBSCRIPTION_STATUS_CHOICES, default='pending', verbose_name=_('Status'))
+    start_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('End Date'))
     cancel_at_period_end = models.BooleanField(default=False, verbose_name=_('Cancel at Period End'))
 
     class Meta:
@@ -82,10 +89,13 @@ class PaymentTransaction(BaseModel):
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='payment_transactions', verbose_name=_('User'))
     user_subscription = models.ForeignKey(UserSubscription, on_delete=models.SET_NULL, null=True, blank=True, related_name='payment_transactions', verbose_name=_('Associated Subscription'))
-    stripe_charge_id = models.CharField(max_length=255, unique=True, verbose_name=_('Stripe Charge/PaymentIntent ID'))
+    transaction_id = models.CharField(max_length=255, unique=True, verbose_name=_('Transaction Reference'))
+    paystack_reference = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Paystack Reference'))
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_('Amount'))
-    currency = models.CharField(max_length=3, choices=settings.CURRENCY_CHOICES, default='USD', verbose_name=_('Currency'))
+    currency = models.CharField(max_length=3, choices=settings.CURRENCY_CHOICES, default='NGN', verbose_name=_('Currency'))
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='paystack', verbose_name=_('Payment Method'))
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending', verbose_name=_('Status'))
+    metadata = models.JSONField(default=dict, blank=True, verbose_name=_('Metadata'))
     paid_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Paid At'))
 
     class Meta:
@@ -94,4 +104,4 @@ class PaymentTransaction(BaseModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Payment {self.id} by {self.user.email} - {self.amount} {self.currency} ({self.get_status_display()})"
+        return f"Payment {self.transaction_id} - {self.amount} {self.currency} ({self.status})"
