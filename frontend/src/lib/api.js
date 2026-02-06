@@ -1,6 +1,6 @@
 import axios from 'axios';
+import useAuthStore from '../store/authStore';
 
-// Access environment variables (Vite uses import.meta.env)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const api = axios.create({
@@ -10,16 +10,14 @@ const api = axios.create({
     },
 });
 
-// Request interceptor to add Auth Token
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-}, (error) => Promise.reject(error));
+});
 
-// Response interceptor for handling token refresh (Optional but recommended)
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -37,9 +35,7 @@ api.interceptors.response.use(
                     return api(originalRequest);
                 }
             } catch (refreshError) {
-                // Logout if refresh fails
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
+                useAuthStore.getState().logout();
                 window.location.href = '/login';
             }
         }
