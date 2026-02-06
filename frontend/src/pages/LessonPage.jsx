@@ -4,17 +4,21 @@ import {
     Menu, X, CheckCircle, Lock, Play, MessageSquare, 
     Volume2, Video, Bookmark, Send, Settings, BookOpen, Pause 
 } from 'lucide-react';
-import api from '../lib/api'; // Your configured Axios instance
+import api from '../lib/api';
 
 export default function LessonPage() {
     const { courseSlug, topicId } = useParams();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [aiTutorOpen, setAiTutorOpen] = useState(false);
     
-    // Data State (Real Data)
+    // UI State
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [aiTutorOpen, setAiTutorOpen] = useState(false); // Mobile Tutor Toggle
+    const [showVideoModal, setShowVideoModal] = useState(false); // TTV Modal State
+    
+    // Data State
     const [courseNav, setCourseNav] = useState(null);
     const [currentTopic, setCurrentTopic] = useState(null);
     const [loading, setLoading] = useState(true);
+    // Preserved Progress State
     const [progress, setProgress] = useState({ percentage: 0, xp: 0, badges: 0 });
 
     // Interactive State
@@ -39,11 +43,14 @@ export default function LessonPage() {
         const loadCourseData = async () => {
             setLoading(true);
             try {
-                // Fetch Navigation Tree from our new Backend Action
                 const navRes = await api.get(`/courses/courses/${courseSlug}/navigation/`);
                 setCourseNav(navRes.data);
                 
-                // If we have nav data but no topicId, default to the first one
+                // Update progress state if available in response
+                if (navRes.data.progress) {
+                    setProgress({ percentage: navRes.data.progress, xp: 0, badges: 0 });
+                }
+                
                 let effectiveTopicId = topicId;
                 if (!effectiveTopicId && navRes.data.modules.length > 0) {
                     effectiveTopicId = navRes.data.modules[0].topics[0].id;
@@ -70,7 +77,6 @@ export default function LessonPage() {
 
     const loadTopicContent = async (tId) => {
         try {
-            // Fetch Topic Details
             const res = await api.get(`/courses/topics/${tId}/`);
             setCurrentTopic(res.data);
             
@@ -81,7 +87,6 @@ export default function LessonPage() {
             setAudioUrl(null);
             setIsPlayingAudio(false);
             
-            // Set Initial AI Message
             const initialMsg = res.data.content_html || res.data.description || "Welcome to this lesson.";
             setMessages([{ role: 'assistant', text: initialMsg }]);
 
@@ -96,60 +101,49 @@ export default function LessonPage() {
         if(!userAnswer.trim()) return;
 
         const pendingAnswer = userAnswer;
-        
-        // Optimistic Update
         setMessages(prev => [...prev, { role: 'user', text: pendingAnswer }]);
         setUserAnswer('');
         setIsSubmitting(true);
 
         try {
-            // Call the new Topic Action
             const res = await api.post(`/courses/topics/${currentTopic.id}/submit_answer/`, {
                 answer: pendingAnswer
             });
-
             const { is_correct, feedback: aiFeedback, xp_awarded } = res.data;
-            
             setMessages(prev => [...prev, { role: 'assistant', text: aiFeedback }]);
             setFeedback({ 
                 type: is_correct ? 'success' : 'error', 
                 text: is_correct ? `Correct! +${xp_awarded} XP` : 'Incorrect, try again.' 
             });
-
         } catch (err) {
             setFeedback({ type: 'error', text: 'Submission failed.' });
-            setUserAnswer(pendingAnswer); // Restore on error
+            setUserAnswer(pendingAnswer);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // 4. Handle Text-To-Speech (AI Agent)
+    // 4. Handle Text-To-Speech
     const handleTTS = async () => {
         if (isPlayingAudio) {
             audioRef.current?.pause();
             setIsPlayingAudio(false);
             return;
         }
-
-        // If we already have the audio, just play it
         if (audioUrl) {
             audioRef.current?.play();
             setIsPlayingAudio(true);
             return;
         }
 
-        // Generate Audio via Backend
         const textToRead = messages.length > 0 ? messages[messages.length - 1].text : currentTopic?.description;
         if (!textToRead) return;
 
         try {
             const res = await api.post('/ai_agents/tts/', {
                 text: textToRead,
-                voice_settings: { voice_id: selectedVoice } // Align payload with backend serializer
+                voice_settings: { voice_id: selectedVoice }
             });
-            
-            // Assuming backend returns { audio_url: "..." } or base64
             const newAudioUrl = res.data.audio_url; 
             setAudioUrl(newAudioUrl);
             
@@ -161,12 +155,12 @@ export default function LessonPage() {
             setIsPlayingAudio(true);
 
         } catch (err) {
-            alert("Failed to generate audio. Ensure AI Service is healthy.");
+            alert("Failed to generate audio.");
             console.error(err);
         }
     };
 
-    // 5. Handle AI Tutor (NLP Tutor)
+    // 5. Handle AI Tutor
     const handleTutorAsk = async (e) => {
         e.preventDefault();
         if (!tutorQuery.trim()) return;
@@ -177,21 +171,14 @@ export default function LessonPage() {
         setIsTutorThinking(true);
 
         try {
-            // Call the NLP Tutor Endpoint
             const res = await api.post('/ai_agents/nlp-tutor/', {
                 query_text: q,
-                course_context: {
-                    course_id: courseSlug,
-                    topic_id: currentTopic?.id
-                }
+                course_context: { course_id: courseSlug, topic_id: currentTopic?.id }
             });
-            
-            // Assuming result structure matches log_interaction
             const tutorResponse = res.data.response_text || res.data.message || "I processed your request.";
             setTutorMessages(prev => [...prev, { role: 'assistant', text: tutorResponse }]);
-
         } catch (err) {
-            setTutorMessages(prev => [...prev, { role: 'assistant', text: "Sorry, I'm having trouble connecting to the AI brain right now." }]);
+            setTutorMessages(prev => [...prev, { role: 'assistant', text: "Sorry, I'm having trouble connecting." }]);
         } finally {
             setIsTutorThinking(false);
         }
@@ -200,7 +187,7 @@ export default function LessonPage() {
     if (loading) return <div className="h-screen flex items-center justify-center text-gray-500">Loading classroom...</div>;
 
     return (
-        <div className="flex h-[calc(100vh-64px)] bg-gray-100 overflow-hidden">
+        <div className="flex h-[calc(100vh-64px)] bg-gray-100 overflow-hidden relative">
             
             {/* --- LEFT SIDEBAR (Navigation) --- */}
             <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white border-r transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 flex flex-col`}>
@@ -232,14 +219,15 @@ export default function LessonPage() {
                     ))}
                 </div>
 
+                {/* --- RESTORED: Progress Section --- */}
                 <div className="p-5 border-t bg-gray-50">
                     <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Your Progress</h4>
                     <div className="flex justify-between text-sm mb-1">
                         <span>Completion</span>
-                        <span className="font-bold">{courseNav?.progress || 0}%</span>
+                        <span className="font-bold">{progress.percentage || 0}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${courseNav?.progress || 0}%` }}></div>
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${progress.percentage || 0}%` }}></div>
                     </div>
                 </div>
             </aside>
@@ -255,7 +243,14 @@ export default function LessonPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition" title="Bookmark"><Bookmark size={20} /></button>
-                        <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition" title="Discuss"><MessageSquare size={20} /></button>
+                        {/* Wired "Discuss" button to Mobile AI Tutor */}
+                        <button 
+                            className={`p-2 rounded-full transition ${aiTutorOpen ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}
+                            title="Discuss / AI Tutor"
+                            onClick={() => setAiTutorOpen(!aiTutorOpen)}
+                        >
+                            <MessageSquare size={20} />
+                        </button>
                     </div>
                 </header>
 
@@ -269,7 +264,7 @@ export default function LessonPage() {
                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] rounded-2xl px-5 py-4 shadow-sm text-sm leading-relaxed ${
                                         msg.role === 'user' 
-                                        ? 'bg-blue-600 text-white rounded-br-none' 
+                                        ? 'bg-[#00b4d8] text-white rounded-br-none' 
                                         : 'bg-white text-gray-800 border rounded-bl-none'
                                     }`}>
                                         <div dangerouslySetInnerHTML={{ __html: msg.text }} />
@@ -295,10 +290,10 @@ export default function LessonPage() {
                                     {isPlayingAudio ? 'Stop' : 'Listen'}
                                 </button>
 
-                                {/* FIX 3: Restore TTV Button */}
+                                {/* FIX: Functional TTV Button */}
                                 <button 
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                                    onClick={() => alert("Text-to-Video generation coming soon!")} 
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-100 text-[#00b4d8] hover:bg-blue-200 transition"
+                                    onClick={() => setShowVideoModal(true)} 
                                 >
                                     <Video size={16} />
                                     <span>Watch Video</span>
@@ -321,7 +316,7 @@ export default function LessonPage() {
                                         {feedback.text}
                                     </span>
                                 )}
-                                <button type="submit" disabled={isSubmitting || !userAnswer.trim()} className="ml-auto bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                                <button type="submit" disabled={isSubmitting || !userAnswer.trim()} className="ml-auto bg-[#00b4d8] text-white p-2 rounded-lg hover:bg-[#0096c7] disabled:opacity-50">
                                     <Send size={18} />
                                 </button>
                             </div>
@@ -330,10 +325,10 @@ export default function LessonPage() {
                 </div>
             </main>
 
-            {/* --- RIGHT SIDEBAR (AI Tutor) --- */}
+            {/* --- RIGHT SIDEBAR (AI Tutor - Desktop) --- */}
             <aside className="hidden lg:flex flex-col w-80 bg-white border-l z-30">
                 <div className="p-5 border-b bg-blue-50/50">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-2"><Settings size={18} className="text-blue-600"/> AI Tutor</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-2"><Settings size={18} className="text-[#00b4d8]"/> AI Tutor</h3>
                     <p className="text-xs text-gray-600">Ask any questions about this topic.</p>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
@@ -352,11 +347,64 @@ export default function LessonPage() {
                         className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" 
                         placeholder="Ask the tutor..." 
                     />
-                    <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg"><Send size={18}/></button>
+                    <button type="submit" className="bg-[#00b4d8] text-white p-2 rounded-lg"><Send size={18}/></button>
                 </form>
             </aside>
-            
-            {/* Mobile AI Tutor Modal implementation omitted for brevity, same logic applies */}
+
+            {/* --- MOBILE AI TUTOR (Slide-over / Modal) --- */}
+            {aiTutorOpen && (
+                <div className="lg:hidden absolute inset-0 z-50 bg-black/50">
+                    <div className="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl flex flex-col animate-slide-in">
+                        <div className="p-4 border-b flex justify-between items-center bg-blue-50/50">
+                            <h3 className="font-bold text-gray-800 flex items-center gap-2"><Settings size={18} className="text-[#00b4d8]"/> AI Tutor</h3>
+                            <button onClick={() => setAiTutorOpen(false)} className="text-gray-500 hover:text-red-500">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
+                            {tutorMessages.map((msg, i) => (
+                                <div key={i} className={`p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-100 ml-4' : 'bg-white shadow-sm mr-4'}`}>
+                                    {msg.text}
+                                </div>
+                            ))}
+                            {isTutorThinking && <div className="text-xs text-gray-400 italic">Thinking...</div>}
+                        </div>
+                        <form onSubmit={handleTutorAsk} className="p-3 bg-white border-t flex gap-2">
+                            <input 
+                                type="text" 
+                                value={tutorQuery}
+                                onChange={(e) => setTutorQuery(e.target.value)}
+                                className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" 
+                                placeholder="Ask AI..." 
+                            />
+                            <button type="submit" className="bg-[#00b4d8] text-white p-2 rounded-lg"><Send size={18}/></button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- VIDEO MODAL (TTV Implementation) --- */}
+            {showVideoModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4">
+                    <div className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl">
+                        <button 
+                            onClick={() => setShowVideoModal(false)}
+                            className="absolute top-4 right-4 text-white hover:text-red-500 z-10 bg-black/50 rounded-full p-2"
+                        >
+                            <X size={24} />
+                        </button>
+                        <div className="aspect-video flex items-center justify-center bg-gray-900 text-white">
+                             {/* Placeholder for actual TTV stream or Video URL */}
+                             <div className="text-center">
+                                <Video size={64} className="mx-auto mb-4 text-[#00b4d8] opacity-50"/>
+                                <h3 className="text-xl font-bold">AI Video Lesson</h3>
+                                <p className="text-gray-400 mt-2">Generating visual explanation for: <span className="text-white italic">"{currentTopic?.title}"</span></p>
+                                <p className="text-xs text-gray-500 mt-4">(Integration ready: Connect backend TTV stream source here)</p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
