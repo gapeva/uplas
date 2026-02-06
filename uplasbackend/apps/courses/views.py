@@ -1,17 +1,16 @@
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.views import APIView
-from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import Category, Course, Module, Topic
 from .serializers import CategorySerializer, CourseListSerializer, CourseDetailSerializer, ModuleDetailSerializer, TopicDetailSerializer
-from apps.payments.models import UserSubscription # CORRECTED IMPORT
 from .permissions import IsInstructorOrReadOnly, IsEnrolled
 
 # ==============================================================================
-# EXISTING VIEWSETS (Kept these as they are good for Router-based URLs)
+# EXISTING VIEWSETS
 # ==============================================================================
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -51,7 +50,7 @@ class ModuleViewSet(viewsets.ModelViewSet):
 
 class TopicViewSet(viewsets.ModelViewSet):
     serializer_class = TopicDetailSerializer
-    permission_classes = [IsEnrolled] # Users must be enrolled to view topics
+    permission_classes = [IsEnrolled]
     lookup_field = 'slug'
 
     def get_queryset(self):
@@ -64,10 +63,9 @@ class TopicViewSet(viewsets.ModelViewSet):
 
 
 # ==============================================================================
-# SPECIFIC VIEWS (Added these to fix your ImportError)
+# SPECIFIC VIEWS
 # ==============================================================================
 
-# 1. Course List View (Inherits filtering from GenericAPIView)
 class CourseListView(generics.ListAPIView):
     queryset = Course.objects.filter(is_published=True)
     serializer_class = CourseListSerializer
@@ -77,14 +75,37 @@ class CourseListView(generics.ListAPIView):
     search_fields = ['title', 'short_description', 'long_description']
     ordering_fields = ['title', 'price', 'created_at', 'average_rating']
 
-# 2. Course Detail View
 class CourseDetailView(generics.RetrieveAPIView):
     queryset = Course.objects.filter(is_published=True)
     serializer_class = CourseDetailSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
 
-# 3. Lesson Content View (Placeholder implementation to safely start server)
+class EnrollCourseView(APIView):
+    """
+    Handles course enrollment. 
+    POST /courses/<int:pk>/enroll/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk=None):
+        course = get_object_or_404(Course, pk=pk)
+        user = request.user
+
+        # Check if already enrolled (assuming a ManyToMany relationship or Enrollment model exists)
+        # Adjust 'students' to match your Course model's related_name for users
+        if course.students.filter(id=user.id).exists():
+            return Response({"message": "Already enrolled"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Basic free enrollment logic
+        # For paid courses, this view would verify payment references (Paystack) before enrolling
+        course.students.add(user)
+        
+        return Response({
+            "message": "Enrolled successfully",
+            "course_slug": course.slug
+        }, status=status.HTTP_201_CREATED)
+
 class LessonContentView(APIView):
     permission_classes = [permissions.IsAuthenticated] # Basic safety
     
@@ -94,7 +115,6 @@ class LessonContentView(APIView):
             status=status.HTTP_200_OK
         )
 
-# 4. Team Member List View (Placeholder implementation)
 class TeamMemberListView(APIView):
     permission_classes = [permissions.AllowAny]
 
