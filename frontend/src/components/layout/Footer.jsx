@@ -1,46 +1,69 @@
-// FILE: frontend/src/components/layout/Footer.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
-        <footer className="bg-gray-900 text-white py-12 border-t border-gray-800">
-            <div className="container mx-auto px-4 grid md:grid-cols-4 gap-8">
-                <div>
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                        <img src="/images/logo-u.svg.png" alt="Uplas" className="h-8" /> Uplas
-                    </h3>
-                    <p className="text-gray-400 text-sm">
-                        Master AI, Secure Your Future. Empowering professionals and students with personalized AI learning.
-                    </p>
+        <footer className="footer bg-gray-900 text-white">
+            <div className="footer__container container">
+                
+                {/* Contact Section */}
+                <div className="footer__section footer__section--contact">
+                    <h3 className="footer__heading">Get in Touch</h3>
+                    <address className="footer__address">
+                        <p>
+                            <i className="fas fa-phone footer__icon" aria-hidden="true"></i> 
+                            <a href="tel:+254708654984" className="footer__link">+254 708 654 984</a>
+                        </p>
+                        <p>
+                            <i className="fas fa-envelope footer__icon" aria-hidden="true"></i> 
+                            <a href="mailto:john@uplas.guru" className="footer__link">john@uplas.guru</a>
+                        </p>
+                        <p>
+                            <i className="fas fa-map-marker-alt footer__icon" aria-hidden="true"></i> 
+                            <span>Nairobi, Kenya</span>
+                        </p>
+                    </address>
                 </div>
-                <div>
-                    <h4 className="font-bold mb-4">Platform</h4>
-                    <ul className="space-y-2 text-sm text-gray-400">
-                        <li><Link to="/courses" className="hover:text-white">Browse Courses</Link></li>
-                        <li><Link to="/projects" className="hover:text-white">AI Projects</Link></li>
-                        <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
-                        <li><Link to="/ai-tutor" className="hover:text-white">AI Tutor</Link></li>
+
+                {/* Social Section */}
+                <div className="footer__section footer__section--social">
+                    <h3 className="footer__heading">Connect With Us</h3>
+                    <div className="social-media">
+                        <a href="#" className="social-media__link" aria-label="Uplas on Facebook" title="Facebook"><i className="fab fa-facebook-f" aria-hidden="true"></i></a>
+                        <a href="#" className="social-media__link" aria-label="Uplas on Twitter" title="Twitter"><i className="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="#" className="social-media__link" aria-label="Uplas on LinkedIn" title="LinkedIn"><i className="fab fa-linkedin-in" aria-hidden="true"></i></a>
+                        <a href="#" className="social-media__link" aria-label="Uplas on Instagram" title="Instagram"><i className="fab fa-instagram" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+
+                {/* Explore Section */}
+                <div className="footer__section footer__section--links">
+                    <h3 className="footer__heading">Explore Uplas</h3>
+                    <ul className="footer__list">
+                        <li><Link to="/" className="footer__link">Home</Link></li>
+                        <li><Link to="/courses" className="footer__link">All Courses</Link></li>
+                        <li><Link to="/pricing" className="footer__link">Pricing Plans</Link></li>
+                        <li><Link to="/blog" className="footer__link">AI Insights Blog</Link></li>
+                        <li><Link to="/about" className="footer__link">About Uplas</Link></li>
                     </ul>
                 </div>
-                <div>
-                    <h4 className="font-bold mb-4">Company</h4>
-                    <ul className="space-y-2 text-sm text-gray-400">
-                        <li><Link to="/about" className="hover:text-white">About Us</Link></li>
-                        <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
-                        <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 className="font-bold mb-4">Legal</h4>
-                    <ul className="space-y-2 text-sm text-gray-400">
-                        <li><Link to="/terms" className="hover:text-white">Terms of Service</Link></li>
-                        <li><Link to="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+
+                {/* Legal Section */}
+                <div className="footer__section footer__section--legal">
+                    <h3 className="footer__heading">Legal & Support</h3>
+                    <ul className="footer__list">
+                        <li><Link to="/terms" className="footer__link">Terms of Service</Link></li>
+                        <li><Link to="/privacy" className="footer__link">Privacy Policy</Link></li>
+                        <li><Link to="/cookies" className="footer__link">Cookie Policy</Link></li>
+                        <li><Link to="/pricing#contact-section" className="footer__link">Help Center</Link></li>
                     </ul>
                 </div>
             </div>
-            <div className="container mx-auto px-4 mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
-                &copy; {new Date().getFullYear()} Uplas. All rights reserved.
+
+            <div className="footer__bottom">
+                <p className="footer__copyright">
+                    © <span id="current-year-footer">{new Date().getFullYear()}</span> Uplas EdTech Solutions Ltd. All rights reserved. Empowering the next generation of AI innovators.
+                </p>
             </div>
         </footer>
     );
