@@ -1,123 +1,63 @@
-import { Link } from 'react-router-dom'
-import { BookOpen, FolderKanban, MessageSquare, Trophy, Clock, TrendingUp } from 'lucide-react'
-import useAuthStore from '../store/authStore'
+import React from 'react';
+import { useUplas } from '../contexts/UplasContext';
 
-export default function DashboardPage() {
-  const { user } = useAuthStore()
+// Import project-specific CSS
+import '../assets/css/uprojects.css';
 
-  const stats = [
-    { icon: BookOpen, label: 'Courses In Progress', value: '3', color: 'text-[var(--color-primary)]' },
-    { icon: FolderKanban, label: 'Projects Completed', value: '5', color: 'text-[var(--color-secondary)]' },
-    { icon: Clock, label: 'Hours Learned', value: '24', color: 'text-[var(--color-accent)]' },
-    { icon: Trophy, label: 'Certificates', value: '2', color: 'text-[var(--color-success)]' },
-  ]
-
-  const recentCourses = [
-    { id: 1, title: 'Introduction to Machine Learning', progress: 75, lastAccessed: '2 hours ago' },
-    { id: 2, title: 'Python for AI Development', progress: 45, lastAccessed: '1 day ago' },
-    { id: 3, title: 'Neural Networks Fundamentals', progress: 20, lastAccessed: '3 days ago' },
-  ]
+const DashboardPage = () => {
+  const { t, user } = useUplas();
 
   return (
-    <div className="py-8">
-      <div className="container">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">
-            Welcome back, {user?.full_name?.split(' ')[0] || 'Learner'}! 👋
-          </h1>
-          <p className="text-[color:var(--current-text-color-secondary)]">
-            Continue your AI learning journey. You're making great progress!
-          </p>
+    <div className="dashboard-container">
+      {/* Sidebar */}
+      <aside className="dashboard-sidebar">
+        <h3 className="sidebar-title">{t('uprojects_sidebar_title', 'Project Tools')}</h3>
+        <nav className="dashboard-nav">
+            <a href="#" className="dashboard-nav__link active"><i className="fas fa-tachometer-alt"></i> {t('uprojects_tool_dashboard', 'Dashboard')}</a>
+            <a href="#" className="dashboard-nav__link"><i className="fas fa-robot"></i> {t('uprojects_tool_ai_tutor', 'AI Tutor')}</a>
+            <a href="#" className="dashboard-nav__link"><i className="fas fa-code"></i> {t('uprojects_tool_cloud_ide', 'Cloud IDE')}</a>
+            <a href="#" className="dashboard-nav__link"><i className="fas fa-users"></i> {t('uprojects_tool_team_hub', 'Team Hub')}</a>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <section className="dashboard-main">
+        <div className="dashboard-header">
+            <h1 className="dashboard-title">{t('uprojects_dashboard_main_title', 'Your AI Project Launchpad')}</h1>
+            <p className="dashboard-subtitle">{t('uprojects_dashboard_subtitle')}</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="card p-5">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg bg-[var(--color-primary-ultralight)] flex items-center justify-center ${stat.color}`}>
-                  <stat.icon size={20} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-[color:var(--current-text-color-secondary)]">{stat.label}</p>
-                </div>
-              </div>
+        <div className="stats-grid">
+            <div className="stat-card">
+                <h3>{t('uprojects_stat_started')}</h3>
+                <p className="stat-number">3</p>
             </div>
-          ))}
+            <div className="stat-card">
+                <h3>{t('uprojects_stat_completed')}</h3>
+                <p className="stat-number">1</p>
+            </div>
+            <div className="stat-card">
+                <h3>{t('uprojects_stat_overall_progress')}</h3>
+                <p className="stat-number">45%</p>
+            </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Recent Courses */}
-          <div className="lg:col-span-2">
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Continue Learning</h2>
-                <Link to="/courses" className="text-sm text-[color:var(--current-link-color)] hover:underline">
-                  View All
-                </Link>
-              </div>
-              <div className="space-y-4">
-                {recentCourses.map(course => (
-                  <div key={course.id} className="p-4 rounded-lg bg-[var(--current-bg-color)] border border-[var(--current-border-color-light)]">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium">{course.title}</h3>
-                      <span className="text-xs text-[color:var(--current-text-color-secondary)]">{course.lastAccessed}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-[var(--current-border-color)] rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-[var(--color-primary)] rounded-full transition-all"
-                          style={{ width: `${course.progress}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium">{course.progress}%</span>
-                    </div>
-                    <Link 
-                      to={`/course/${course.id}`}
-                      className="button button--primary button--small mt-3"
-                    >
-                      Continue
-                    </Link>
-                  </div>
-                ))}
-              </div>
+        {/* Current Projects */}
+        <div className="projects-section">
+            <div className="section-header-group">
+                <h2>{t('uprojects_current_projects_title')}</h2>
+                <button className="button button--primary">{t('uprojects_button_start_new')}</button>
             </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="space-y-6">
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Link to="/ai-tutor" className="flex items-center gap-3 p-3 rounded-lg bg-[var(--current-bg-color)] hover:bg-[var(--color-primary-ultralight)] transition-colors">
-                  <MessageSquare className="text-[var(--color-primary)]" size={20} />
-                  <span className="font-medium">Ask AI Tutor</span>
-                </Link>
-                <Link to="/projects" className="flex items-center gap-3 p-3 rounded-lg bg-[var(--current-bg-color)] hover:bg-[var(--color-primary-ultralight)] transition-colors">
-                  <FolderKanban className="text-[var(--color-secondary)]" size={20} />
-                  <span className="font-medium">My Projects</span>
-                </Link>
-                <Link to="/community" className="flex items-center gap-3 p-3 rounded-lg bg-[var(--current-bg-color)] hover:bg-[var(--color-primary-ultralight)] transition-colors">
-                  <TrendingUp className="text-[var(--color-accent)]" size={20} />
-                  <span className="font-medium">Community</span>
-                </Link>
-              </div>
+            
+            {/* Empty State Placeholder */}
+            <div className="no-projects-placeholder">
+                <p>{t('uprojects_no_projects_msg')}</p>
             </div>
-
-            {/* Learning Streak */}
-            <div className="card p-6 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white">
-              <div className="flex items-center gap-3 mb-2">
-                <Trophy size={24} />
-                <h3 className="font-semibold">Learning Streak</h3>
-              </div>
-              <p className="text-3xl font-bold mb-1">7 Days 🔥</p>
-              <p className="text-sm opacity-90">Keep it up! You're on a roll.</p>
-            </div>
-          </div>
         </div>
-      </div>
+      </section>
     </div>
-  )
-}
+  );
+};
+
+export default DashboardPage;
