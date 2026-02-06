@@ -36,12 +36,39 @@ export default function CourseDetailPage() {
         loadData();
     }, [slug]);
 
+    
+
     // Toggle a single module's accordion
     const toggleModule = (id) => {
         setOpenModuleIds(prev => 
             prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
         );
     };
+
+    useEffect(() => {
+        const scriptId = 'paystack-script';
+        if (!document.getElementById(scriptId)) {
+            const script = document.createElement('script');
+            script.id = scriptId;
+            script.src = "https://js.paystack.co/v1/inline.js";
+            script.async = true;
+            document.body.appendChild(script);
+        }
+    }, []);
+
+    const handleEnroll = async () => {
+        if (!isAuthenticated) {
+            return navigate('/login', { state: { returnUrl: `/courses/${slug}` } });
+        }
+        
+        setEnrolling(true);
+
+        // Check availability logic
+        if (course.price > 0 && !window.PaystackPop) {
+             alert("Payment gateway is loading. Please wait a moment and try again.");
+             setEnrolling(false);
+             return;
+        }
 
     // Expand/Collapse all helper
     const toggleAllModules = () => {
