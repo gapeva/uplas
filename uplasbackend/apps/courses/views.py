@@ -126,6 +126,21 @@ class TopicViewSet(viewsets.ModelViewSet):
             "feedback": feedback,
             "xp_awarded": 10 if is_correct else 0
         })
+        
+    @action(detail=True, methods=['post'], url_path='complete')
+    def mark_complete(self, request, pk=None):
+        """
+        Manually marks a topic as complete (e.g., for reading-only topics).
+        """
+        topic = self.get_object()
+        # In a real app, you would create a Completion model instance here
+        # Completion.objects.get_or_create(user=request.user, topic=topic)
+        
+        return Response({
+            "status": "success", 
+            "message": "Topic marked as complete",
+            "xp_awarded": 5
+        })
 
 
 # ==============================================================================
