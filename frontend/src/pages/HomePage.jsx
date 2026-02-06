@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import '../../styles/uhome.css'; 
-import heroImage from '../assets/images/uplas_hero_placeholder.png'; // Make sure this asset exists or use placeholder
-import featureImage from '../assets/images/logo-u.svg.png'; // Make sure this asset exists
 
-// Simple FAQ Item Component
+// Assets - Using absolute paths for public folder or correct relative imports if in assets
+// Based on file list, images are in 'frontend/images', usually mapped to public/images in Vite.
+const heroImage = "/images/uplas_hero_placeholder.png"; 
+const logoImage = "/images/logo-u.svg.png";
+
 const FaqItem = ({ question, answer }) => {
     const [isOpen, setIsOpen] = useState(false);
     return (
@@ -37,17 +39,15 @@ const HomePage = () => {
                             Master AI with our unique Q&A model and secure your place in the future workforce.
                         </p>
                         <div className="hero-section__cta-group">
-                            {/* Pass state to activate signup tab */}
                             <Link to="/login" state={{ mode: 'signup' }} className="button button--primary button--large hero-section__cta">Get Started Free</Link>
                             <Link to="/pricing" className="button button--secondary button--large hero-section__cta">Explore Plans</Link>
                         </div>
                     </div>
                     <div className="hero-section__media-content">
                         <div className="video-responsive-container" style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', background: '#eee' }}>
-                            {/* Restored Iframe Logic */}
                             <iframe 
                                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                                src="https://www.youtube-nocookie.com/embed/YOUR_YOUTUBE_VIDEO_ID"
+                                src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=0" 
                                 title="Uplas Platform Quick Demo" 
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -100,10 +100,14 @@ const HomePage = () => {
             <section className="feature-highlight-section py-16 bg-gray-50">
                 <div className="container feature-highlight__container flex flex-col md:flex-row items-center gap-10">
                     <div className="feature-highlight__image-container md:w-1/2">
-                        {/* Replaced broken character with Image tag. Ensure the image is in public/images or imported */}
                         <div className="flex items-center justify-center">
-                             <img src="/images/logo-u.svg.png" alt="Uplas Learning" className="max-w-full h-auto" onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='block'}} />
-                             <span className="text-4xl hidden">📱</span> {/* Fallback */}
+                             <img 
+                                src={logoImage} 
+                                alt="Uplas Learning" 
+                                className="max-w-full h-auto" 
+                                onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='block'}} 
+                             />
+                             <span className="text-4xl hidden">📱</span>
                         </div>
                     </div>
                     <div className="feature-highlight__text-content md:w-1/2">
