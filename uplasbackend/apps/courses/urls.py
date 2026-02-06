@@ -1,22 +1,21 @@
-# courses/urls.py
-from django.urls import path
+# apps/courses/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
-    CourseListView, 
-    CourseDetailView, 
-    LessonContentView, 
-    TeamMemberListView,
-    EnrollCourseView
+    CategoryViewSet, CourseViewSet, ModuleViewSet, TopicViewSet,
+    EnrollCourseView, UserEnrollmentListView
 )
 
 app_name = 'courses'
 
-urlpatterns = [
-    path('courses/', CourseListView.as_view(), name='course-list'),
-    path('courses/<slug:slug>/', CourseDetailView.as_view(), name='course-detail'),
-    
-    # Added Enrollment Endpoint
-    path('courses/<int:pk>/enroll/', EnrollCourseView.as_view(), name='course-enroll'),
+router = DefaultRouter()
+router.register(r'categories', CategoryViewSet)
+router.register(r'courses', CourseViewSet)
+# Note: Module/Topic usually handled via nested routes or specific logic, 
+# but keeping simple registration if already used.
 
-    path('lessons/<int:pk>/content/', LessonContentView.as_view(), name='lesson-content'),
-    path('team/', TeamMemberListView.as_view(), name='team-list'),
+urlpatterns = [
+    path('', include(router.urls)),
+    path('enrollments/', UserEnrollmentListView.as_view(), name='user-enrollments'),
+    path('courses/<int:pk>/enroll/', EnrollCourseView.as_view(), name='course-enroll'),
 ]
