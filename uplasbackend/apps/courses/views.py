@@ -36,6 +36,45 @@ class CourseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(instructor=self.request.user)
 
+    # --- ADD THIS ACTION ---
+    @action(detail=True, methods=['get'], permission_classes=[IsEnrolled])
+    def navigation(self, request, slug=None):
+        """
+        Returns the full course hierarchy (Modules -> Topics) with 
+        completion status for the sidebar navigation.
+        """
+        course = self.get_object()
+        modules = course.modules.all().order_by('order')
+        
+        # Build the tree manually or use a specific NavigationSerializer
+        nav_data = {
+            "title": course.title,
+            "progress": 0, # Calculate actual progress here based on UserCourseProgress
+            "modules": []
+        }
+        
+        for module in modules:
+            topics_data = []
+            for topic in module.topics.all().order_by('order'):
+                # Check if user has completed this topic
+                # is_completed = topic.completions.filter(user=request.user).exists()
+                is_completed = False # Placeholder logic
+                topics_data.append({
+                    "id": topic.id, # Using ID for mapping
+                    "slug": topic.slug, # Useful if routing by slug
+                    "title": topic.title,
+                    "is_completed": is_completed,
+                    "is_locked": False # Implement lock logic based on progress
+                })
+            
+            nav_data["modules"].append({
+                "id": module.id,
+                "title": module.title,
+                "topics": topics_data
+            })
+            
+        return Response(nav_data)
+
 class ModuleViewSet(viewsets.ModelViewSet):
     serializer_class = ModuleDetailSerializer
     permission_classes = [IsInstructorOrReadOnly]
@@ -49,17 +88,44 @@ class ModuleViewSet(viewsets.ModelViewSet):
         serializer.save(course=course)
 
 class TopicViewSet(viewsets.ModelViewSet):
+    queryset = Topic.objects.all() # Added queryset
     serializer_class = TopicDetailSerializer
     permission_classes = [IsEnrolled]
-    lookup_field = 'slug'
+    # lookup_field = 'slug' # Careful with lookup fields if using ID in routes
 
     def get_queryset(self):
-        module_id = self.kwargs.get('module_pk')
-        return Topic.objects.filter(module_id=module_id).order_by('order')
+        # If accessed nested
+        if 'module_pk' in self.kwargs:
+            return Topic.objects.filter(module_id=self.kwargs['module_pk']).order_by('order')
+        return Topic.objects.all()
 
     def perform_create(self, serializer):
         module = Module.objects.get(pk=self.kwargs.get('module_pk'))
         serializer.save(module=module)
+
+    # --- ADD THIS ACTION ---
+    @action(detail=True, methods=['post'], url_path='submit_answer')
+    def submit_answer(self, request, pk=None):
+        """
+        Validates a user's answer to a question within this topic.
+        """
+        topic = self.get_object()
+        user_answer = request.data.get('answer')
+        
+        # Simple Logic: In reality, you'd look up the specific Question model
+        # linked to this topic.
+        # For parity, we assume the Topic has a "questions" relation or field.
+        
+        # Mocking the grading logic if Question model isn't strictly defined yet
+        is_correct = True # Replace with: topic.questions.first().check_answer(user_answer)
+        
+        feedback = "Correct! You nailed the definition." if is_correct else "Not quite. Try focusing on..."
+        
+        return Response({
+            "is_correct": is_correct,
+            "feedback": feedback,
+            "xp_awarded": 10 if is_correct else 0
+        })
 
 
 # ==============================================================================
