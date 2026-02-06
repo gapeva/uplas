@@ -45,7 +45,8 @@ const AuthPage = () => {
         setStatusMsg({ type: '', text: '' });
         const success = await login(loginData.email, loginData.password);
         if (success) {
-            navigate('/dashboard');
+            const destination = location.state?.returnUrl || '/projects'; 
+            navigate(destination);
         }
     };
 
