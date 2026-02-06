@@ -1,17 +1,15 @@
 import axios from 'axios';
-import useAuthStore from '../store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('accessToken');
+
+    const token = localStorage.getItem('accessToken'); 
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,17 +23,30 @@ api.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             try {
+
                 const refreshToken = localStorage.getItem('refreshToken');
                 if (refreshToken) {
-                    const { data } = await axios.post(`${API_URL}/auth/token/refresh/`, {
+                    const { data } = await axios.post(`${API_URL}/users/token/refresh/`, {
                         refresh: refreshToken
                     });
+
                     localStorage.setItem('accessToken', data.access);
+
+                    const authStorage = JSON.parse(localStorage.getItem('auth-storage') || '{}');
+                    if(authStorage.state) {
+                        authStorage.state.accessToken = data.access;
+                        localStorage.setItem('auth-storage', JSON.stringify(authStorage));
+                    }
+
                     api.defaults.headers.common['Authorization'] = `Bearer ${data.access}`;
+                    originalRequest.headers['Authorization'] = `Bearer ${data.access}`;
                     return api(originalRequest);
                 }
             } catch (refreshError) {
-                useAuthStore.getState().logout();
+                // Clear everything on failure
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('auth-storage');
                 window.location.href = '/login';
             }
         }
