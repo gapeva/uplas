@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import Layout from '../components/layout/Layout';
 import '../../styles/uhome.css'; 
 
 // Assets - Using absolute paths for public folder or correct relative imports if in assets
