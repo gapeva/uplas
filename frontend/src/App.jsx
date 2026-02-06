@@ -4,10 +4,10 @@ import { UplasProvider, useUplas } from './contexts/UplasContext';
 import Layout from './components/Layout';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import AuthPage from './pages/AuthPage'; // Added
 
 // Pages
-import Home from './pages/Home';
-import LoginPage from './pages/LoginPage';
+import Home from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
