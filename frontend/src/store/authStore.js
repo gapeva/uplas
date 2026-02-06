@@ -19,12 +19,10 @@ const useAuthStore = create(
                     const response = await api.post('/auth/login/', { email, password });
                     const { access, refresh } = response.data;
                     
-                    // Decode token or fetch user profile immediately after login if needed
-                    // For now, we assume we fetch profile separately or backend sends it
-                    // Let's fetch profile to get full name, etc.
-                    localStorage.setItem('accessToken', access); // Need this for the next req
-                    localStorage.setItem('refreshToken', refresh);
-                    
+                    // Fetch user profile immediately
+                    // Note: We temporarily set token in state so the subsequent profile fetch works (if api.js reads from state)
+                    set({ accessToken: access, refreshToken: refresh });
+
                     const profileRes = await api.get('/auth/profile/');
                     
                     set({ 
@@ -38,7 +36,9 @@ const useAuthStore = create(
                 } catch (error) {
                     set({ 
                         error: error.response?.data?.detail || 'Login failed', 
-                        isLoading: false 
+                        isLoading: false,
+                        accessToken: null,
+                        refreshToken: null
                     });
                     return false;
                 }
@@ -48,12 +48,11 @@ const useAuthStore = create(
             signup: async (userData) => {
                 set({ isLoading: true, error: null });
                 try {
-                    // Map frontend fields to backend Serializer fields
                     const payload = {
                         email: userData.email,
                         full_name: userData.fullName,
                         password: userData.password,
-                        password2: userData.confirmPassword, // Backend expects 'password2'
+                        password2: userData.confirmPassword,
                         phone_number: `${userData.countryCode}${userData.phone}`,
                         organization: userData.organization,
                         industry: userData.industry === 'Other' ? userData.otherIndustry : userData.industry,
@@ -72,15 +71,19 @@ const useAuthStore = create(
                 }
             },
 
+            // Internal helper to update tokens silently (used by API interceptor)
+            setTokens: (access, refresh) => {
+                set({ accessToken: access, refreshToken: refresh });
+            },
+
             // Logout Action
             logout: () => {
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
                 set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+                localStorage.removeItem('auth-storage'); // Clear persist storage
             },
         }),
         {
-            name: 'auth-storage', // unique name for localStorage key
+            name: 'auth-storage',
             partialize: (state) => ({ 
                 user: state.user, 
                 accessToken: state.accessToken, 
