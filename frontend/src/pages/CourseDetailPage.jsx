@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
     CheckCircle, PlayCircle, Lock, ChevronDown, ChevronUp, 
-    Clock, FileText, Award, Globe, AlertCircle, Star, Video 
+    Clock, FileText, Award, Globe, AlertCircle, Star, Video, X 
 } from 'lucide-react';
 import api from '../lib/api';
 import useAuthStore from '../store/authStore';
@@ -12,11 +12,17 @@ export default function CourseDetailPage() {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuthStore();
     
+    // Data State
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
+    
+    // UI State
     const [enrolling, setEnrolling] = useState(false);
     const [openModuleIds, setOpenModuleIds] = useState([]);
+    const [showPreview, setShowPreview] = useState(false);
+    const [isPaystackLoaded, setPaystackLoaded] = useState(false);
 
+    // 1. Load Course Data
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -36,41 +42,31 @@ export default function CourseDetailPage() {
         loadData();
     }, [slug]);
 
-    
+    // 2. Load Paystack Script Robustly
+    useEffect(() => {
+        const scriptId = 'paystack-script';
+        if (document.getElementById(scriptId)) {
+            setPaystackLoaded(true);
+            return;
+        }
 
-    // Toggle a single module's accordion
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = "https://js.paystack.co/v1/inline.js";
+        script.async = true;
+        script.onload = () => setPaystackLoaded(true);
+        script.onerror = () => console.error("Failed to load Paystack payment gateway");
+        document.body.appendChild(script);
+    }, []);
+
+    // Helper: Toggle a single module's accordion
     const toggleModule = (id) => {
         setOpenModuleIds(prev => 
             prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
         );
     };
 
-    useEffect(() => {
-        const scriptId = 'paystack-script';
-        if (!document.getElementById(scriptId)) {
-            const script = document.createElement('script');
-            script.id = scriptId;
-            script.src = "https://js.paystack.co/v1/inline.js";
-            script.async = true;
-            document.body.appendChild(script);
-        }
-    }, []);
-
-    const handleEnroll = async () => {
-        if (!isAuthenticated) {
-            return navigate('/login', { state: { returnUrl: `/courses/${slug}` } });
-        }
-        
-        setEnrolling(true);
-
-        // Check availability logic
-        if (course.price > 0 && !window.PaystackPop) {
-             alert("Payment gateway is loading. Please wait a moment and try again.");
-             setEnrolling(false);
-             return;
-        }
-
-    // Expand/Collapse all helper
+    // Helper: Expand/Collapse all
     const toggleAllModules = () => {
         if (course.modules?.length === openModuleIds.length) {
             setOpenModuleIds([]);
@@ -79,6 +75,7 @@ export default function CourseDetailPage() {
         }
     };
 
+    // 3. Handle Enrollment (Free & Paid)
     const handleEnroll = async () => {
         if (!isAuthenticated) {
             // Redirect to login with return URL
@@ -87,44 +84,45 @@ export default function CourseDetailPage() {
         
         setEnrolling(true);
         try {
-            // 1. Check if Free Course
+            // A. Free Course
             if (!course.price || course.price <= 0) {
                 await api.post(`/courses/courses/${course.id}/enroll/`);
                 navigate(`/courses/${course.slug}/learn`);
                 return;
             }
 
-            // 2. Paid Course - Paystack Integration
-            if (window.PaystackPop) {
-                const paystack = new window.PaystackPop();
-                paystack.newTransaction({
-                    key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY, // Ensure this exists in .env
-                    email: user.email,
-                    amount: course.price * 100, // Paystack expects amount in Kobo/Cents
-                    currency: 'USD', // Adjust currency if needed (NGN, KES, USD)
-                    onSuccess: async (transaction) => {
-                        // Backend Verification
-                        await api.post(`/courses/courses/${course.id}/enroll/`, { 
-                            reference: transaction.reference 
-                        });
-                        alert("Enrollment successful! Welcome aboard.");
-                        navigate(`/courses/${course.slug}/learn`);
-                    },
-                    onCancel: () => {
-                        setEnrolling(false);
-                        // Optional: alert("Payment cancelled.");
-                    }
-                });
-            } else {
-                alert("Payment gateway not loaded. Please refresh the page.");
-                setEnrolling(false);
+            // B. Paid Course - Paystack Integration
+            if (!isPaystackLoaded || !window.PaystackPop) {
+                 alert("Payment gateway is still loading. Please wait a second and try again.");
+                 setEnrolling(false);
+                 return;
             }
+
+            const paystack = new window.PaystackPop();
+            paystack.newTransaction({
+                key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY, 
+                email: user.email,
+                amount: course.price * 100, // Paystack expects Kobo
+                currency: 'USD', // Change to NGN or KES if using local currency
+                onSuccess: async (transaction) => {
+                    // Backend Verification
+                    await api.post(`/courses/courses/${course.id}/enroll/`, { 
+                        reference: transaction.reference 
+                    });
+                    alert("Enrollment successful! Welcome aboard.");
+                    navigate(`/courses/${course.slug}/learn`);
+                },
+                onCancel: () => {
+                    setEnrolling(false);
+                }
+            });
+
         } catch (err) {
             console.error("Enrollment failed", err);
             if (err.response?.status === 400 && err.response?.data?.message?.includes("Already enrolled")) {
                 navigate(`/courses/${course.slug}/learn`);
             } else {
-                alert("Something went wrong. Please try again.");
+                alert("Something went wrong with enrollment. Please try again.");
             }
             setEnrolling(false);
         }
@@ -310,7 +308,10 @@ export default function CourseDetailPage() {
                             {/* Enrollment Card */}
                             <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
                                 {/* Preview Video / Image */}
-                                <div className="relative aspect-video bg-black cursor-pointer group" onClick={() => {/* Open Preview Modal */}}>
+                                <div 
+                                    className="relative aspect-video bg-black cursor-pointer group" 
+                                    onClick={() => setShowPreview(true)}
+                                >
                                     <img 
                                         src={course.thumbnail_url || "https://placehold.co/600x400"} 
                                         alt={course.title} 
@@ -343,7 +344,7 @@ export default function CourseDetailPage() {
 
                                     <button 
                                         onClick={handleEnroll}
-                                        disabled={enrolling}
+                                        disabled={enrolling || (course.price > 0 && !isPaystackLoaded)}
                                         className="w-full py-3.5 bg-black text-white text-base font-bold rounded-lg hover:bg-gray-800 transition shadow-lg mb-4 disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         {enrolling ? 'Processing...' : (isEnrolled ? "Go to Course" : "Enroll Now")}
@@ -385,6 +386,39 @@ export default function CourseDetailPage() {
 
                 </div>
             </div>
+
+            {/* --- PREVIEW MODAL --- */}
+            {showPreview && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+                    <div className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl">
+                        <button 
+                            onClick={() => setShowPreview(false)}
+                            className="absolute top-4 right-4 text-white hover:text-red-500 z-10 bg-black/50 rounded-full p-2"
+                        >
+                            <X size={24} />
+                        </button>
+                        <div className="aspect-video">
+                            {course.intro_video_url ? (
+                                <iframe 
+                                    src={course.intro_video_url.includes('youtube.com') 
+                                        ? course.intro_video_url.replace("watch?v=", "embed/") 
+                                        : course.intro_video_url} 
+                                    title="Course Preview"
+                                    className="w-full h-full"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-white bg-gray-900">
+                                    <Video size={48} className="mb-4 text-gray-500" />
+                                    <p className="text-lg">No preview video available for this course.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
