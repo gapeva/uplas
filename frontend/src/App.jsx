@@ -75,6 +75,7 @@ const App = () => {
 
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/about" element={<AboutPage />} />
               
             {/* Specific Route for Learning Interface */}
             <Route path="/courses/:courseSlug/learn/:topicId?" element={
