@@ -1,67 +1,47 @@
-import { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
-import useThemeStore from './store/themeStore'
-import useAuthStore from './store/authStore'
-import Layout from './components/Layout'
-import ProtectedRoute from './components/ProtectedRoute'
-import HomePage from './pages/HomePage'
-import CoursesPage from './pages/CoursesPage'
-import PricingPage from './pages/PricingPage'
-import BlogPage from './pages/BlogPage'
-import CommunityPage from './pages/CommunityPage'
-import ProjectsPage from './pages/ProjectsPage'
-import AboutPage from './pages/AboutPage'
-import PrivacyPage from './pages/PrivacyPage'
-import TermsPage from './pages/TermsPage'
-import NotFoundPage from './pages/NotFoundPage'
-import DashboardPage from './pages/DashboardPage'
-import AITutorPage from './pages/AITutorPage'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { UplasProvider, useUplas } from './contexts/UplasContext';
+import Home from './pages/Home';
 
-function App() {
-  const initializeTheme = useThemeStore((state) => state.initializeTheme)
-  const initializeAuth = useAuthStore((state) => state.initializeAuth)
+// Placeholder for Dashboard
+const Dashboard = () => {
+    const { logout, user } = useUplas();
+    return (
+        <div style={{padding: '100px', textAlign: 'center'}}>
+            <h1>Welcome, {user?.full_name}</h1>
+            <button onClick={logout} className="button button--secondary">Logout</button>
+        </div>
+    );
+};
 
-  useEffect(() => {
-    initializeTheme()
-    initializeAuth()
-  }, [initializeTheme, initializeAuth])
+// Protected Route Wrapper
+const ProtectedRoute = ({ children }) => {
+    const { user, loading } = useUplas();
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <Navigate to="/" replace />;
+    return children;
+};
 
+const App = () => {
   return (
-    <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: 'var(--toast-bg, #fff)',
-            color: 'var(--toast-color, #333)',
-          },
-        }}
-      />
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          {/* Public Routes */}
-          <Route index element={<HomePage />} />
-          <Route path="courses" element={<CoursesPage />} />
-          <Route path="pricing" element={<PricingPage />} />
-          <Route path="blog" element={<BlogPage />} />
-          <Route path="about" element={<AboutPage />} />
-          <Route path="privacy" element={<PrivacyPage />} />
-          <Route path="terms" element={<TermsPage />} />
-          
-          {/* Protected Routes - Require Authentication */}
-          <Route path="dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-          <Route path="ai-tutor" element={<ProtectedRoute><AITutorPage /></ProtectedRoute>} />
-          <Route path="community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
-          <Route path="projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
-          
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-    </>
-  )
-}
+    <UplasProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          {/* Add other routes (Pricing, Courses) here */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </UplasProvider>
+  );
+};
 
-export default App
+export default App;
