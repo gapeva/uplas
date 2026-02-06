@@ -92,13 +92,9 @@ class EnrollCourseView(APIView):
         course = get_object_or_404(Course, pk=pk)
         user = request.user
 
-        # Check if already enrolled (assuming a ManyToMany relationship or Enrollment model exists)
-        # Adjust 'students' to match your Course model's related_name for users
         if course.students.filter(id=user.id).exists():
             return Response({"message": "Already enrolled"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Basic free enrollment logic
-        # For paid courses, this view would verify payment references (Paystack) before enrolling
         course.students.add(user)
         
         return Response({
@@ -106,12 +102,23 @@ class EnrollCourseView(APIView):
             "course_slug": course.slug
         }, status=status.HTTP_201_CREATED)
 
+class UserEnrollmentListView(generics.ListAPIView):
+    """
+    Lists courses the authenticated user is enrolled in.
+    GET /courses/enrollments/
+    """
+    serializer_class = CourseListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Course.objects.filter(students=self.request.user)
+
 class LessonContentView(APIView):
-    permission_classes = [permissions.IsAuthenticated] # Basic safety
+    permission_classes = [permissions.IsAuthenticated] 
     
     def get(self, request, course_slug=None, module_slug=None, lesson_slug=None):
         return Response(
-            {"message": "Lesson content logic placeholder. Replace with actual retrieval logic."},
+            {"message": "Lesson content logic placeholder."},
             status=status.HTTP_200_OK
         )
 
