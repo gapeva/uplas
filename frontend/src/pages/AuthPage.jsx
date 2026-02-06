@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import { Link } from 'react-router-dom';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':\\|,.<>\/?]).{8,}$/;
 const PHONE_REGEX = /^[0-9]{7,15}$/;
@@ -220,6 +219,32 @@ const AuthPage = () => {
                                     />
                                 </div>
                             )}
+
+                            {/* Step 2.5: Phone Verification (ADDED) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (WhatsApp Verification)</label>
+                                <div className="flex gap-2">
+                                    <select 
+                                        className="w-1/3 px-3 py-2 border border-gray-300 rounded-md bg-white"
+                                        value={signupData.countryCode}
+                                        onChange={(e) => setSignupData({...signupData, countryCode: e.target.value})}
+                                    >
+                                        <option value="+1">+1 (US)</option>
+                                        <option value="+44">+44 (UK)</option>
+                                        <option value="+254">+254 (KE)</option>
+                                        <option value="+234">+234 (NG)</option>
+                                        <option value="+91">+91 (IN)</option>
+                                    </select>
+                                    <input 
+                                        type="tel" 
+                                        className="w-2/3 px-4 py-2 border border-gray-300 rounded-md" 
+                                        value={signupData.phone}
+                                        onChange={(e) => setSignupData({...signupData, phone: e.target.value.replace(/\D/g,'')})} // Enforce digits only
+                                        placeholder="712345678"
+                                        required 
+                                    />
+                                </div>
+                            </div>
 
                             {/* Step 3: Password */}
                             <div>
