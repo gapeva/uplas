@@ -1,24 +1,73 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-// import SignupPage from './pages/SignupPage'; // Create similarly to LoginPage
-import CoursesPage from './pages/CoursesPage';
-// import DashboardPage from './pages/DashboardPage';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { UplasProvider, useUplas } from './contexts/UplasContext';
+import Layout from './components/Layout';
 
-function App() {
+// Pages
+import Home from './pages/Home';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import CoursesPage from './pages/CoursesPage';
+import CourseDetailPage from './pages/CourseDetailPage';
+import LessonPage from './pages/LessonPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import CommunityPage from './pages/CommunityPage';
+import ThreadPage from './pages/ThreadPage'; // New
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage'; // New
+import PricingPage from './pages/PricingPage'; // New
+import AITutorPage from './pages/AITutorPage';
+
+const ProtectedRoute = ({ children }) => {
+    const { user, loading } = useUplas();
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <Navigate to="/login" replace />;
+    return children;
+};
+
+const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<HomePage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="courses" element={<CoursesPage />} />
-          {/* Add other routes here */}
-        </Route>
-      </Routes>
-    </Router>
+    <UplasProvider>
+      <Router>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginPage />} />
+            
+            {/* Courses */}
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/courses/:slug" element={<CourseDetailPage />} />
+            <Route path="/courses/:courseSlug/learn/:topicId" element={
+                <ProtectedRoute><LessonPage /></ProtectedRoute>
+            } />
+
+            {/* Projects */}
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:slug" element={<ProjectDetailPage />} />
+
+            {/* Community */}
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community/thread/:slug" element={<ThreadPage />} />
+
+            {/* Blog */}
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+
+            {/* Pricing */}
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/ai-tutor" element={<AITutorPage />} />
+
+            {/* Dashboard */}
+            <Route path="/dashboard" element={
+                <ProtectedRoute><DashboardPage /></ProtectedRoute>
+            } />
+          </Route>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </UplasProvider>
   );
-}
+};
 
 export default App;
