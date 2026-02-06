@@ -1,14 +1,11 @@
-/* css/variables.css */
-/* ================================================
-   Uplas Global CSS Variables (v2.0 - CORRECTED)
-   ================================================ */
+/* src/styles/variables.css */
 
 :root {
-    /* === Core Color Palette (Futuristic EdTech) === */
-    --color-primary: #4A90E2;
-    --color-primary-dark: #357ABD;
-    --color-primary-light: #8DB9ED;
-    --color-primary-ultralight: rgba(74, 144, 226, 0.1);
+    /* === Core Color Palette (Restored to Legacy Branding) === */
+    --color-primary: #00b4d8; /* Legacy Cyan/Blue */
+    --color-primary-dark: #0096c7;
+    --color-primary-light: #caf0f8;
+    --color-primary-ultralight: rgba(0, 180, 216, 0.1);
 
     --color-secondary: #50E3C2;
     --color-secondary-dark: #3BAA90;
@@ -111,7 +108,7 @@
     --current-header-bg: var(--color-white);
     --current-footer-bg: var(--color-light-text-primary);
     --current-footer-text-color: #bdc3c7;
-    --current-footer-heading-color: var(--color-black); /* Set to Black for visibility in light mode */
+    --current-footer-heading-color: var(--color-black);
 
     /* Button Theming */
     --current-button-primary-bg: var(--color-primary);
@@ -131,7 +128,7 @@
     --current-header-bg: var(--color-dark-bg-panel);
     --current-footer-bg: var(--color-dark-bg-primary);
     --current-footer-text-color: var(--color-dark-text-secondary);
-    --current-footer-heading-color: var(--color-white); /* Set to White for visibility in dark mode */
+    --current-footer-heading-color: var(--color-white);
 
     /* Button Theming - Dark Mode */
     --current-button-primary-bg: var(--color-secondary);
