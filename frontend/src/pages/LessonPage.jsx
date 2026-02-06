@@ -1,19 +1,29 @@
-// src/pages/LessonPage.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
     Menu, X, CheckCircle, Lock, Play, MessageSquare, 
-    Award, BookOpen, Volume2, Video 
+    Volume2, Video, Bookmark, Send, Settings, BookOpen 
 } from 'lucide-react';
 import api from '../lib/api';
 
 export default function LessonPage() {
-    const { courseSlug, topicId } = useParams(); // Updated route params
+    const { courseSlug, topicId } = useParams();
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [aiTutorOpen, setAiTutorOpen] = useState(false);
+    
+    // Data State
     const [courseNav, setCourseNav] = useState(null);
     const [currentTopic, setCurrentTopic] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [aiTutorOpen, setAiTutorOpen] = useState(false);
+
+    // Interactive State
+    const [userAnswer, setUserAnswer] = useState('');
+    const [feedback, setFeedback] = useState(null); // { type: 'success'|'error', text: '' }
+    const [messages, setMessages] = useState([]); // Q&A History
+    
+    // TTS State
+    const [selectedVoice, setSelectedVoice] = useState('alloy');
+    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
     useEffect(() => {
         loadLessonData();
@@ -22,15 +32,44 @@ export default function LessonPage() {
     const loadLessonData = async () => {
         setLoading(true);
         try {
-            // Fetch Navigation
-            const navRes = await api.get(`/courses/courses/${courseSlug}/navigation/`);
-            setCourseNav(navRes.data);
+            // Mocking the Navigation Data based on mcourse.html structure
+            // In real app: const navRes = await api.get(`/courses/${courseSlug}/navigation/`);
+            const mockNav = {
+                title: "Advanced AI & Machine Learning",
+                progress: 35,
+                modules: [
+                    {
+                        id: 1, title: "AI Fundamentals", topics: [
+                            { id: '1.1', title: "What is AI?", completed: true },
+                            { id: '1.2', title: "Types of AI", completed: false },
+                            { id: '1.3', title: "History of AI", completed: false },
+                        ]
+                    },
+                    {
+                        id: 2, title: "Machine Learning Basics", topics: [
+                            { id: '2.1', title: "Supervised Learning", completed: false },
+                            { id: '2.2', title: "Unsupervised Learning", completed: false, locked: true },
+                        ]
+                    }
+                ]
+            };
+            setCourseNav(mockNav);
 
-            // Fetch Topic Content
-            // Determine topicId if not in URL (default to first)
-            const activeTopicId = topicId || navRes.data.modules[0].topics[0].id;
-            const topicRes = await api.get(`/courses/courses/${courseSlug}/topics/${activeTopicId}/`);
-            setCurrentTopic(topicRes.data);
+            // Mocking Topic Content
+            // In real app: const topicRes = await api.get(`/courses/${courseSlug}/topics/${topicId}/`);
+            setCurrentTopic({
+                id: topicId || '1.1',
+                title: "What is AI?",
+                content: "Artificial Intelligence (AI) is the simulation of human intelligence processes by machines, especially computer systems.",
+                initialQuestion: "Welcome! Let's start with a basic question: Can you define Artificial Intelligence in your own words?"
+            });
+
+            // Initialize chat with AI question
+            setMessages([{ 
+                role: 'assistant', 
+                text: "Welcome! Let's start with a basic question: Can you define Artificial Intelligence in your own words?" 
+            }]);
+
         } catch (err) {
             console.error("Error loading lesson", err);
         } finally {
@@ -38,179 +77,232 @@ export default function LessonPage() {
         }
     };
 
-    const handleMarkComplete = async () => {
-        try {
-            await api.post(`/courses/courses/${courseSlug}/topics/${currentTopic.id}/complete/`);
-            setCurrentTopic({ ...currentTopic, is_completed: true });
-            // Refresh nav to show checkmark
-            const navRes = await api.get(`/courses/courses/${courseSlug}/navigation/`);
-            setCourseNav(navRes.data);
-        } catch (err) {
-            console.error(err);
-        }
+    const handleAnswerSubmit = (e) => {
+        e.preventDefault();
+        if(!userAnswer.trim()) return;
+
+        // Add user message
+        const newHistory = [...messages, { role: 'user', text: userAnswer }];
+        setMessages(newHistory);
+        setUserAnswer('');
+
+        // Simulate AI Grading/Response
+        setTimeout(() => {
+            const aiResponse = { 
+                role: 'assistant', 
+                text: "That's a great definition! You correctly identified that AI simulates human intelligence. Now, let's explore the different types of AI." 
+            };
+            setMessages(prev => [...prev, aiResponse]);
+            setFeedback({ type: 'success', text: 'Correct! +10 XP' });
+        }, 1000);
+    };
+
+    const handleTTS = () => {
+        setIsPlayingAudio(!isPlayingAudio);
+        // Integrate actual TTS API here
+        if(!isPlayingAudio) alert(`Playing text with voice: ${selectedVoice}`);
     };
 
     if (loading) return <div className="h-screen flex items-center justify-center">Loading classroom...</div>;
 
     return (
-        <div className="flex h-screen bg-gray-100 overflow-hidden">
-            {/* Sidebar Navigation */}
-            <aside 
-                className={`fixed inset-y-0 left-0 z-50 w-80 bg-white border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
-            >
-                <div className="h-full flex flex-col">
-                    <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                        <h2 className="font-bold text-gray-800 truncate" title={courseNav?.title}>
-                            {courseNav?.title || 'Course Content'}
-                        </h2>
-                        <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500">
-                            <X size={20} />
-                        </button>
-                    </div>
-                    
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        {courseNav?.modules?.map((module, idx) => (
-                            <div key={module.id}>
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                    Module {idx + 1}: {module.title}
-                                </h3>
-                                <ul className="space-y-1">
-                                    {module.topics.map(topic => (
-                                        <li key={topic.id}>
-                                            <Link 
-                                                to={`/courses/${courseSlug}/learn/${topic.id}`}
-                                                className={`flex items-center justify-between p-2 rounded text-sm transition ${
-                                                    currentTopic?.id === topic.id 
-                                                        ? 'bg-primary/10 text-primary font-medium' 
-                                                        : 'text-gray-600 hover:bg-gray-50'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-2 truncate">
-                                                    <span className="truncate">{topic.title}</span>
-                                                </div>
-                                                {topic.is_completed ? (
-                                                    <CheckCircle size={14} className="text-green-500 shrink-0" />
-                                                ) : topic.is_locked ? (
-                                                    <Lock size={14} className="text-gray-300 shrink-0" />
-                                                ) : (
-                                                    <div className="w-3.5 h-3.5 rounded-full border border-gray-300 shrink-0"></div>
-                                                )}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
+        <div className="flex h-[calc(100vh-64px)] bg-gray-100 overflow-hidden">
+            
+            {/* --- LEFT SIDEBAR (Navigation) --- */}
+            <aside className={`fixed inset-y-0 left-0 z-40 w-80 bg-white border-r transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 flex flex-col`}>
+                <div className="p-5 border-b bg-gray-50 flex justify-between items-center">
+                    <h2 className="font-bold text-gray-800">Course Navigation</h2>
+                    <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500"><X size={20}/></button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                    {courseNav?.modules.map((module, i) => (
+                        <div key={module.id}>
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Module {i+1}: {module.title}</h3>
+                            <ul className="space-y-1">
+                                {module.topics.map(topic => (
+                                    <li key={topic.id}>
+                                        <Link 
+                                            to={`/courses/${courseSlug}/learn/${topic.id}`}
+                                            className={`flex items-center justify-between p-2 rounded text-sm transition ${
+                                                currentTopic?.id === topic.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                                            } ${topic.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-2 truncate">
+                                                <span className="truncate">{topic.title}</span>
+                                            </div>
+                                            {topic.completed ? <CheckCircle size={14} className="text-green-500"/> : topic.locked ? <Lock size={14} className="text-gray-400"/> : <div className="w-3.5 h-3.5 border rounded-full"></div>}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
 
-                    <div className="p-4 border-t bg-gray-50">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                            <span>Progress</span>
-                            <span>{courseNav?.progress_percent || 0}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                                className="bg-green-500 h-2 rounded-full transition-all duration-500" 
-                                style={{ width: `${courseNav?.progress_percent || 0}%` }}
-                            ></div>
-                        </div>
+                <div className="p-5 border-t bg-gray-50">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Your Progress</h4>
+                    <div className="flex justify-between text-sm mb-1">
+                        <span>Completion</span>
+                        <span className="font-bold">{courseNav?.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${courseNav?.progress}%` }}></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>XP: <strong>1,250</strong></span>
+                        <span>Badges: <strong>3</strong></span>
                     </div>
                 </div>
             </aside>
 
-            {/* Main Content */}
+            {/* --- MAIN CONTENT AREA --- */}
             <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+                
+                {/* Header */}
                 <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-gray-600">
-                            <Menu />
-                        </button>
-                        <h1 className="text-lg font-bold text-gray-800 truncate max-w-md">
-                            {currentTopic?.title}
-                        </h1>
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-gray-600"><Menu/></button>
+                        <h1 className="text-lg font-bold text-gray-800 truncate">{currentTopic?.title}</h1>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary px-3 py-2 rounded-lg hover:bg-gray-50 transition">
-                            <Volume2 size={18} />
-                            <span className="hidden sm:inline">Listen</span>
+                    <div className="flex items-center gap-2">
+                        <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition" title="Bookmark">
+                            <Bookmark size={20} />
                         </button>
-                        <button 
-                            onClick={() => setAiTutorOpen(true)}
-                            className="flex items-center gap-2 text-sm font-medium text-white bg-black hover:bg-gray-800 px-4 py-2 rounded-lg transition shadow-md"
-                        >
-                            <MessageSquare size={18} />
-                            <span>AI Tutor</span>
+                        <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition" title="Discuss">
+                            <MessageSquare size={20} />
                         </button>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-6 md:p-10">
-                    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border p-8 min-h-[60vh]">
-                        {/* Dynamic Content (HTML) */}
-                        <div 
-                            className="prose max-w-none text-gray-700 leading-8"
-                            dangerouslySetInnerHTML={{ __html: currentTopic?.content_html || "<p>Content loading...</p>" }}
-                        />
-
-                        {/* Interactive Elements Placeholder (Quizzes/Videos) */}
-                        {currentTopic?.video_url && (
-                            <div className="mt-8 aspect-video bg-black rounded-xl overflow-hidden relative group cursor-pointer">
-                                <img src={`https://img.youtube.com/vi/${currentTopic.video_id}/maxresdefault.jpg`} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Play size={64} className="text-white fill-current" />
+                {/* Content & QnA Scroll Area */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-100">
+                    <div className="max-w-3xl mx-auto space-y-6">
+                        
+                        {/* Q&A / Chat Interface */}
+                        <div className="space-y-4 mb-8">
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] rounded-2xl px-5 py-4 shadow-sm text-sm leading-relaxed ${
+                                        msg.role === 'user' 
+                                        ? 'bg-blue-600 text-white rounded-br-none' 
+                                        : 'bg-white text-gray-800 border rounded-bl-none'
+                                    }`}>
+                                        {msg.text}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            ))}
+                        </div>
 
-                    {/* Completion Actions */}
-                    <div className="max-w-4xl mx-auto mt-8 flex justify-end">
-                        <button 
-                            onClick={handleMarkComplete}
-                            disabled={currentTopic?.is_completed}
-                            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition ${
-                                currentTopic?.is_completed 
-                                ? 'bg-green-100 text-green-700 cursor-default' 
-                                : 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/30'
-                            }`}
-                        >
-                            {currentTopic?.is_completed ? (
-                                <> <CheckCircle size={20} /> Completed </>
-                            ) : (
-                                <> Mark as Complete <CheckCircle size={20} /> </>
-                            )}
-                        </button>
+                        {/* Media Controls */}
+                        <div className="bg-white p-4 rounded-xl shadow-sm border flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <select 
+                                    className="bg-gray-100 border-none rounded-lg text-sm px-3 py-2 focus:ring-0 cursor-pointer"
+                                    value={selectedVoice}
+                                    onChange={(e) => setSelectedVoice(e.target.value)}
+                                >
+                                    <option value="alloy">Alloy (Neutral)</option>
+                                    <option value="echo">Echo (Energetic)</option>
+                                    <option value="fable">Fable (Storyteller)</option>
+                                </select>
+                                <button 
+                                    onClick={handleTTS}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition ${
+                                        isPlayingAudio ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    <Volume2 size={16} /> {isPlayingAudio ? 'Stop' : 'Listen'}
+                                </button>
+                            </div>
+                            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-sm font-bold transition">
+                                <Video size={16} /> Watch Video
+                            </button>
+                        </div>
+
+                        {/* User Input Area */}
+                        <form onSubmit={handleAnswerSubmit} className="bg-white p-2 rounded-xl shadow-lg border relative focus-within:ring-2 ring-blue-500/50 transition">
+                            <textarea 
+                                className="w-full border-none focus:ring-0 resize-none p-3 text-gray-700 min-h-[80px]"
+                                placeholder="Type your answer here..."
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                            ></textarea>
+                            <div className="flex justify-between items-center px-3 pb-2">
+                                {feedback && (
+                                    <span className={`text-xs font-bold ${feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                        {feedback.text}
+                                    </span>
+                                )}
+                                <button 
+                                    type="submit" 
+                                    className="ml-auto bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"
+                                    disabled={!userAnswer.trim()}
+                                >
+                                    <Send size={18} />
+                                </button>
+                            </div>
+                        </form>
+
                     </div>
                 </div>
+
             </main>
 
-            {/* AI Tutor Modal Overlay */}
+            {/* --- RIGHT SIDEBAR (AI Tutor & Resources) --- */}
+            <aside className="hidden lg:flex flex-col w-72 bg-white border-l z-30">
+                
+                {/* AI Tutor Panel */}
+                <div className="p-5 border-b bg-blue-50/50">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-2">
+                        <Settings size={18} className="text-blue-600"/> AI Tutor
+                    </h3>
+                    <p className="text-xs text-gray-600 mb-4">Stuck? Need clarification? Ask the AI Tutor!</p>
+                    <button 
+                        onClick={() => setAiTutorOpen(true)}
+                        className="w-full py-2 bg-white border border-blue-200 text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition shadow-sm"
+                    >
+                        Open Tutor Chat
+                    </button>
+                </div>
+
+                {/* Resources */}
+                <div className="p-5 flex-1 overflow-y-auto">
+                    <h3 className="font-bold text-gray-800 text-sm mb-4">Topic Resources</h3>
+                    <ul className="space-y-3">
+                        <li>
+                            <a href="#" className="flex items-center gap-3 text-sm text-gray-600 hover:text-blue-600 transition">
+                                <div className="p-2 bg-gray-100 rounded-lg"><BookOpen size={16}/></div>
+                                <span>Key Definitions PDF</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" className="flex items-center gap-3 text-sm text-gray-600 hover:text-blue-600 transition">
+                                <div className="p-2 bg-gray-100 rounded-lg"><Video size={16}/></div>
+                                <span>Deep Dive Video</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            {/* AI Tutor Modal (Mobile/Overlay) */}
             {aiTutorOpen && (
-                <div className="fixed inset-0 z-[100] bg-black/50 flex items-end md:items-center justify-center md:justify-end p-4 md:p-10">
-                    <div className="bg-white w-full md:w-96 h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
-                        <div className="bg-black text-white p-4 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500"></div>
-                                <span className="font-bold">AI Tutor</span>
-                            </div>
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-md h-[600px] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="bg-gray-900 text-white p-4 flex justify-between items-center">
+                            <h3 className="font-bold flex items-center gap-2">🤖 AI Tutor Chat</h3>
                             <button onClick={() => setAiTutorOpen(false)}><X size={20}/></button>
                         </div>
-                        <div className="flex-1 p-4 bg-gray-50 overflow-y-auto">
-                            <div className="flex gap-3 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500 shrink-0"></div>
-                                <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700">
-                                    Hi! I'm your AI Tutor. How can I help you with <b>{currentTopic?.title}</b>?
-                                </div>
+                        <div className="flex-1 bg-gray-50 p-4 overflow-y-auto">
+                            <div className="bg-white p-3 rounded-lg shadow-sm text-sm inline-block max-w-[85%]">
+                                Hello! I am your personal AI Tutor. How can I help you understand <b>{currentTopic?.title}</b> better?
                             </div>
-                            {/* Chat messages would go here */}
                         </div>
-                        <div className="p-4 bg-white border-t">
-                            <input 
-                                type="text" 
-                                placeholder="Ask a question..." 
-                                className="w-full bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary"
-                            />
-                        </div>
+                        <form className="p-3 bg-white border-t flex gap-2">
+                            <input type="text" className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" placeholder="Ask a question..." />
+                            <button className="bg-blue-600 text-white p-2 rounded-lg"><Send size={18}/></button>
+                        </form>
                     </div>
                 </div>
             )}
