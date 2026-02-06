@@ -1,83 +1,125 @@
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { Menu, X, User, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import '../../styles/header.css'; 
 
 const Header = () => {
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    const handleLogout = () => {
+    // Toggle Mobile Menu
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
+    const handleLogout = (e) => {
+        e.preventDefault();
         logout();
         navigate('/');
+        setIsMenuOpen(false);
     };
 
     return (
-        <header className="bg-white border-b sticky top-0 z-50">
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                {/* Logo */}
-                <Link to="/" className="flex items-center gap-2">
-                    {/* Ensure logo image is in public/images */}
-                    <img src="/images/logo-u.svg.png" alt="Uplas" className="h-8" />
-                    <span className="font-bold text-xl text-blue-600 hidden md:block">Uplas</span>
+        <header className="site-header">
+            <div className="container header__container">
+                <Link to="/" className="logo" aria-label="Uplas Homepage">
+                    <img src="/images/logo-u.svg.png" alt="Uplas Logo" className="logo__img" />
+                    <span className="logo__text">plas</span>
                 </Link>
 
-                {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-8">
-                    <Link to="/courses" className="text-gray-600 hover:text-blue-600 font-medium">Courses</Link>
-                    <Link to="/projects" className="text-gray-600 hover:text-blue-600 font-medium">Projects</Link>
-                    <Link to="/community" className="text-gray-600 hover:text-blue-600 font-medium">Community</Link>
-                    <Link to="/blog" className="text-gray-600 hover:text-blue-600 font-medium">Blog</Link>
-                    <Link to="/pricing" className="text-gray-600 hover:text-blue-600 font-medium">Pricing</Link>
+                <nav 
+                    className={`nav ${isMenuOpen ? 'nav--open' : ''}`} 
+                    id="main-navigation" 
+                    aria-label="Main site navigation"
+                >
+                    {/* Logged Out Navigation */}
+                    {!user && (
+                        <ul className="nav__list" id="nav-logged-out">
+                            <li className="nav__item"><Link to="/" className="nav__link" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
+                            <li className="nav__item"><Link to="/courses" className="nav__link" onClick={() => setIsMenuOpen(false)}>Courses</Link></li>
+                            <li className="nav__item"><Link to="/pricing" className="nav__link" onClick={() => setIsMenuOpen(false)}>Pricing</Link></li>
+                            <li className="nav__item"><Link to="/about" className="nav__link" onClick={() => setIsMenuOpen(false)}>About</Link></li>
+                            <li className="nav__item"><Link to="/blog" className="nav__link" onClick={() => setIsMenuOpen(false)}>Blog</Link></li>
+                        </ul>
+                    )}
+
+                    {/* Logged In Navigation */}
+                    {user && (
+                        <ul className="nav__list" id="nav-logged-in">
+                            <li className="nav__item"><Link to="/dashboard" className="nav__link" onClick={() => setIsMenuOpen(false)}>Dashboard</Link></li>
+                            <li className="nav__item"><Link to="/courses" className="nav__link" onClick={() => setIsMenuOpen(false)}>My Courses</Link></li>
+                            <li className="nav__item"><Link to="/community" className="nav__link" onClick={() => setIsMenuOpen(false)}>Community</Link></li>
+                        </ul>
+                    )}
                 </nav>
 
-                {/* Auth Buttons */}
-                <div className="hidden md:flex items-center gap-4">
-                    {user ? (
-                        <div className="flex items-center gap-4">
-                            <Link to="/dashboard" className="flex items-center gap-2 text-gray-700 font-medium hover:text-blue-600">
-                                <User size={20} />
-                                <span>{user.full_name?.split(' ')[0]}</span>
-                            </Link>
-                            <button onClick={handleLogout} className="text-gray-500 hover:text-red-600" title="Logout">
-                                <LogOut size={20} />
-                            </button>
+                <div className="header-actions">
+                    <div className="language-currency-selectors">
+                        <div className="select-wrapper">
+                            <label htmlFor="language-selector" className="sr-only">Select Language</label>
+                            <i className="fas fa-globe selector-icon"></i>
+                            <select id="language-selector" className="header-select" title="Select Language" defaultValue="en">
+                                <option value="en">English (EN)</option>
+                                <option value="es">Español (ES)</option>
+                                <option value="fr">Français (FR)</option>
+                                <option value="de">Deutsch (DE)</option>
+                                <option value="zh">中文 (简体)</option>
+                                <option value="hi">हिन्दी (HI)</option>
+                            </select>
                         </div>
-                    ) : (
-                        <Link 
-                            to="/login" 
-                            state={{ mode: 'signup' }}
-                            className="px-5 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
-                        >
-                            Get Started
-                        </Link>
-                    )}
+                        <div className="select-wrapper" id="currency-selector-wrapper">
+                            <label htmlFor="currency-selector" className="sr-only">Select Currency</label>
+                            <i className="fas fa-coins selector-icon"></i>
+                            <select id="currency-selector" className="header-select" title="Select Currency" defaultValue="USD">
+                                <option value="USD">USD ($)</option>
+                                <option value="EUR">EUR (€)</option>
+                                <option value="JPY">JPY (¥)</option>
+                                <option value="GBP">GBP (£)</option>
+                                <option value="AUD">AUD (A$)</option>
+                                <option value="CAD">CAD (C$)</option>
+                                <option value="CHF">CHF (Fr)</option>
+                                <option value="CNY">CNY (¥)</option>
+                                <option value="INR">INR (₹)</option>
+                                <option value="KES">KES (KSh)</option>
+                                <option value="BTC">BTC (₿)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="theme-toggle" className="button button--theme" aria-label="Switch color theme" title="Toggle theme">
+                        <i className="fas fa-moon theme-icon theme-icon--dark"></i>
+                        <i className="fas fa-sun theme-icon theme-icon--light"></i>
+                        <span className="sr-only">Toggle Dark/Light Mode</span>
+                    </button>
+
+                    <div className="nav__item nav__item--cta-placeholder" id="auth-header-link-container">
+                        {user ? (
+                            <button 
+                                onClick={handleLogout} 
+                                className="button button--secondary"
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                            >
+                                Logout
+                            </button>
+                        ) : (
+                            <Link to="/login" className="button button--primary">Login / Sign Up</Link>
+                        )}
+                    </div>
                 </div>
 
-                {/* Mobile Menu Toggle */}
-                <button className="md:hidden text-gray-700" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                <button 
+                    className="nav__toggle" 
+                    id="mobile-nav-toggle" 
+                    aria-label="Toggle navigation menu" 
+                    aria-expanded={isMenuOpen} 
+                    aria-controls="main-navigation"
+                    onClick={toggleMenu}
+                >
+                    <i className={`fas ${isMenuOpen ? 'fa-times' : 'fa-bars'}`} aria-hidden="true"></i>
+                    <span className="sr-only">Menu</span>
                 </button>
             </div>
-
-            {/* Mobile Nav Dropdown */}
-            {isMenuOpen && (
-                <div className="md:hidden bg-white border-t p-4 flex flex-col gap-4 shadow-lg absolute w-full left-0">
-                    <Link to="/courses" className="py-2 text-gray-700 font-medium border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>Courses</Link>
-                    <Link to="/projects" className="py-2 text-gray-700 font-medium border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>Projects</Link>
-                    <Link to="/community" className="py-2 text-gray-700 font-medium border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>Community</Link>
-                    <Link to="/pricing" className="py-2 text-gray-700 font-medium border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>Pricing</Link>
-                    {user ? (
-                        <>
-                            <Link to="/dashboard" className="py-2 text-blue-600 font-bold" onClick={() => setIsMenuOpen(false)}>My Dashboard</Link>
-                            <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="py-2 text-red-600 font-medium text-left">Logout</button>
-                        </>
-                    ) : (
-                        <Link to="/login" className="py-2 text-center bg-blue-600 text-white rounded-lg font-bold" onClick={() => setIsMenuOpen(false)}>Login / Sign Up</Link>
-                    )}
-                </div>
-            )}
         </header>
     );
 };
