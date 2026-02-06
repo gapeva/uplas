@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import '../../styles/uhome.css'; 
+import heroImage from '../assets/images/uplas_hero_placeholder.png'; // Make sure this asset exists or use placeholder
+import featureImage from '../assets/images/logo-u.svg.png'; // Make sure this asset exists
 
 // Simple FAQ Item Component
 const FaqItem = ({ question, answer }) => {
@@ -35,14 +37,22 @@ const HomePage = () => {
                             Master AI with our unique Q&A model and secure your place in the future workforce.
                         </p>
                         <div className="hero-section__cta-group">
-                            <Link to="/login" className="button button--primary button--large hero-section__cta">Get Started Free</Link>
+                            {/* Pass state to activate signup tab */}
+                            <Link to="/login" state={{ mode: 'signup' }} className="button button--primary button--large hero-section__cta">Get Started Free</Link>
                             <Link to="/pricing" className="button button--secondary button--large hero-section__cta">Explore Plans</Link>
                         </div>
                     </div>
                     <div className="hero-section__media-content">
-                        <div className="video-responsive-container bg-gray-200 rounded-lg flex items-center justify-center h-64 md:h-auto">
-                           {/* Placeholder for Video/Image */}
-                           <span className="text-gray-500">Interactive Content Placeholder</span>
+                        <div className="video-responsive-container" style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', background: '#eee' }}>
+                            {/* Restored Iframe Logic */}
+                            <iframe 
+                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                                src="https://www.youtube-nocookie.com/embed/YOUR_YOUTUBE_VIDEO_ID"
+                                title="Uplas Platform Quick Demo" 
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen>
+                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -68,6 +78,16 @@ const HomePage = () => {
                             <h3 className="benefit-item__title">Portfolio-Ready Projects</h3>
                             <p>Build AI-generated, real-world projects for your CV.</p>
                         </div>
+                        <div className="benefit-item">
+                            <div className="benefit-item__icon">🗣️</div>
+                            <h3 className="benefit-item__title">Flexible Formats</h3>
+                            <p>Text-to-Audio/Video to learn your way.</p>
+                        </div>
+                        <div className="benefit-item">
+                            <div className="benefit-item__icon">🌍</div>
+                            <h3 className="benefit-item__title">Global Community</h3>
+                            <p>Connect with fellow learners and mentors.</p>
+                        </div>
                          <div className="benefit-item">
                             <div className="benefit-item__icon">🏆</div>
                             <h3 className="benefit-item__title">Future-Proof Your Career</h3>
@@ -77,12 +97,13 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* Feature Highlight Section (Restored from index.html) */}
             <section className="feature-highlight-section py-16 bg-gray-50">
                 <div className="container feature-highlight__container flex flex-col md:flex-row items-center gap-10">
                     <div className="feature-highlight__image-container md:w-1/2">
-                        <div className="bg-gray-200 h-64 w-full rounded-lg flex items-center justify-center">
-                             <span className="text-4xl">📱</span>
+                        {/* Replaced broken character with Image tag. Ensure the image is in public/images or imported */}
+                        <div className="flex items-center justify-center">
+                             <img src="/images/logo-u.svg.png" alt="Uplas Learning" className="max-w-full h-auto" onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='block'}} />
+                             <span className="text-4xl hidden">📱</span> {/* Fallback */}
                         </div>
                     </div>
                     <div className="feature-highlight__text-content md:w-1/2">
@@ -97,7 +118,6 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* FAQ Section (Restored from index.html) */}
             <section className="faq-section py-16">
                 <div className="container max-w-3xl mx-auto">
                     <h2 className="section-title text-center mb-2">Frequently Asked Questions</h2>
