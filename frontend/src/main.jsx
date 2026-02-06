@@ -1,6 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import './styles/variables.css' 
+import './styles/global.css' 
+import './index.css
 
 // --- LEGACY STYLE IMPORTS (Fixed: Visual Integrity) ---
 // Loading these ensures that variables (--primary-color), fonts, 
