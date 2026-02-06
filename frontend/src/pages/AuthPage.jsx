@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { Link } from 'react-router-dom';
 
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':\\|,.<>\/?]).{8,}$/;
+const PHONE_REGEX = /^[0-9]{7,15}$/;
+
 const AuthPage = () => {
     const [activeTab, setActiveTab] = useState('login');
     const navigate = useNavigate();
@@ -52,6 +55,19 @@ const AuthPage = () => {
 
         if (signupData.password !== signupData.confirmPassword) {
             setStatusMsg({ type: 'error', text: 'Passwords do not match.' });
+            return;
+        }
+        
+        if (!PASSWORD_REGEX.test(signupData.password)) {
+            setStatusMsg({ 
+                type: 'error', 
+                text: 'Password must be 8+ chars, include uppercase, lowercase, number, and special symbol.' 
+            });
+            return;
+        }
+        
+        if (!PHONE_REGEX.test(signupData.phone)) {
+            setStatusMsg({ type: 'error', text: 'Please enter a valid phone number (digits only).' });
             return;
         }
 
