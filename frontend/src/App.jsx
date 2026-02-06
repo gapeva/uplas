@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { UplasProvider, useUplas } from './contexts/UplasContext';
 import Layout from './components/Layout';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Pages
 import Home from './pages/Home';
@@ -61,6 +63,16 @@ const App = () => {
             {/* Dashboard */}
             <Route path="/dashboard" element={
                 <ProtectedRoute><DashboardPage /></ProtectedRoute>
+
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            } />
+              
+            {/* Specific Route for Learning Interface (No Layout/Header/Footer usually) */}
+            <Route path="/courses/:courseSlug/learn/:topicId?" element={
+                <ProtectedRoute>
+                    <LessonPage />
+                </ProtectedRoute>
             } />
           </Route>
           <Route path="*" element={<Navigate to="/" />} />
