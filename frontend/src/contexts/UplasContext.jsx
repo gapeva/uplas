@@ -1,92 +1,89 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import enTranslations from '../../frontend/locales/en.json'; // Adjust path as needed
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import api from '../lib/api';
+import enTranslations from '../../frontend/locales/en.json'; // Assuming you copied the JSON file
 
 const UplasContext = createContext();
 
 export const UplasProvider = ({ children }) => {
-  // --- Theme State ---
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('uplasGlobalTheme') === 'true' || 
-           window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  // --- Language State ---
-  const [language, setLanguage] = useState(() => localStorage.getItem('uplasPreferredLanguage') || 'en');
-  const [translations, setTranslations] = useState(enTranslations);
-
-  // --- Currency State ---
-  const [currency, setCurrency] = useState(() => localStorage.getItem('uplasUserCurrency') || 'USD');
-  const exchangeRates = { USD: 1, EUR: 0.92, KES: 130.50, GBP: 0.79, INR: 83.00, JPY: 157.00 };
-
   // --- Auth State ---
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- Effects ---
-  useEffect(() => {
-    document.body.classList.toggle('dark-mode', isDarkMode);
-    localStorage.setItem('uplasGlobalTheme', isDarkMode);
-  }, [isDarkMode]);
+  // --- Theme State ---
+  const [theme, setTheme] = useState(localStorage.getItem('uplas-theme') || 'light');
 
-  useEffect(() => {
-    // In a real app, fetch dynamic JSON here based on `language`
-    // For now, we use the embedded EN translations
-    localStorage.setItem('uplasPreferredLanguage', language);
-  }, [language]);
+  // --- I18n State ---
+  const [language, setLanguage] = useState(localStorage.getItem('uplas-lang') || 'en');
+  const [translations, setTranslations] = useState(enTranslations);
 
-  useEffect(() => {
-    localStorage.setItem('uplasUserCurrency', currency);
-  }, [currency]);
+  // --- Currency State (Simulated) ---
+  const [currency, setCurrency] = useState(localStorage.getItem('uplas-currency') || 'USD');
 
-  // --- Methods ---
-  const toggleTheme = () => setIsDarkMode(prev => !prev);
-  
+  // --- Initialization ---
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const { data } = await api.get('auth/profile/');
+          setUser(data);
+        } catch (error) {
+          console.error("Failed to fetch profile", error);
+          localStorage.removeItem('access_token');
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
+  }, []);
+
+  // --- Theme Effect ---
+  useEffect(() => {
+    document.body.classList.remove('light-mode', 'dark-mode');
+    document.body.classList.add(`${theme}-mode`);
+    localStorage.setItem('uplas-theme', theme);
+  }, [theme]);
+
+  // --- Actions ---
+  const login = async (email, password) => {
+    const { data } = await api.post('auth/login/', { email, password });
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+    
+    // Fetch profile immediately after login
+    const profileRes = await api.get('auth/profile/');
+    setUser(profileRes.data);
+    return profileRes.data;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setUser(null);
+  };
+
+  const register = async (userData) => {
+    // Maps frontend field names to Django expected names if necessary
+    const { data } = await api.post('auth/register/', userData);
+    return data;
+  };
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  // --- Translation Helper ---
   const t = (key, fallback) => {
     return translations[key] || fallback || key;
   };
 
-  const formatPrice = (amountInUSD) => {
-    const rate = exchangeRates[currency] || 1;
-    const value = amountInUSD * rate;
-    try {
-      return new Intl.NumberFormat(language, {
-        style: 'currency',
-        currency: currency,
-      }).format(value);
-    } catch (e) {
-      return `${currency} ${value.toFixed(2)}`;
-    }
-  };
-
-  const login = async (email, password) => {
-    // Simulated Login
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email.includes('@')) {
-          const mockUser = { id: 1, email, full_name: 'Test User' };
-          setUser(mockUser);
-          localStorage.setItem('accessToken', 'mock_jwt_token');
-          resolve(mockUser);
-        } else {
-          reject(new Error('Invalid credentials'));
-        }
-      }, 1000);
-    });
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('accessToken');
-  };
-
   return (
     <UplasContext.Provider value={{
-      isDarkMode, toggleTheme,
+      user, loading, login, logout, register,
+      theme, toggleTheme,
       language, setLanguage,
       currency, setCurrency,
-      user, login, logout,
-      t, formatPrice
+      t
     }}>
       {children}
     </UplasContext.Provider>
